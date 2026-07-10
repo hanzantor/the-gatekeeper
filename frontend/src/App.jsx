@@ -1,121 +1,71 @@
+// App.jsx — room scene with a swappable background image and glowing clue
+// markers positioned on top. STRUCTURE is fixed for every environment; only
+// the background image changes (office / hospital / government).
+// The glowing dots are placeholders — Phase 7 art replaces them in the same spots.
+
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
+import { MARKERS } from './data/markers.js'
 import './App.css'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [turnsRemaining] = useState(15)
+
+  // Which environment background to show. Later the scenario picks this.
+  // Files live in /public: room-office.png, room-hospital.png, room-government.png
+  const roomBackground = 'room-office.png'
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
+    <div className="app">
+      <header className="titlebar">
+        <span className="titlebar-name">THE GATEKEEPER</span>
+        <span className="titlebar-status">SECURE ROOM · LOCKED</span>
+      </header>
+
+      <main className="stage">
+        {/* Room scene: background image + 21 fixed markers on top.
+            Marker x/y come from data/markers.js and are the SAME across every
+            environment — only the image behind them changes. */}
+        <div
+          className="room"
+          style={{ backgroundImage: `url(/${roomBackground})` }}
         >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
+          {MARKERS.map((m) => (
+            <button
+              key={m.id}
+              className="clue-marker"
+              style={{ left: `${m.x}%`, top: `${m.y}%` }}
+              data-zone={m.zone}
+              data-surface={m.surface}
+              aria-label={`Examine marker ${m.id} (${m.zone})`}
+            >
+              <span className="clue-dot" />
+            </button>
+          ))}
         </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+        {/* Terminal */}
+        <section className="terminal">
+          <div className="terminal-header">
+            <span className="terminal-dot" />
+            GATEKEEPER TERMINAL
+          </div>
+          <div className="terminal-body">
+            <p className="gatekeeper-line">
+              State your business. The door does not open for those who cannot explain themselves.
+            </p>
+          </div>
+          <div className="terminal-input">
+            <input type="text" placeholder="Type your response…" className="terminal-field" />
+            <button className="terminal-send">SEND</button>
+          </div>
+        </section>
+      </main>
+
+      <footer className="statusbar">
+        <span>Turns remaining: <strong>{turnsRemaining}</strong></span>
+        <span className="statusbar-hint">Examine the room. Make your case.</span>
+      </footer>
+    </div>
   )
 }
 
