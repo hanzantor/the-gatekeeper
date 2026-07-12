@@ -29,8 +29,19 @@
 
 const BASE = '/clues';
 
-/** Nominal sprite size in px before per-clue and per-surface scaling. */
-const BASE_SIZE = 72;
+/**
+ * Nominal sprite size as a percentage of the ROOM'S OWN width (cqw units),
+ * not the viewport. 7.5 was picked to match the original px-based tuning
+ * (72px looked right at the room's original ~960px rendered width;
+ * 72/960 = 7.5%). Using cqw instead of px means sprites automatically
+ * shrink and grow with the room element itself — whether that's because
+ * the browser was resized or because a sidebar now shares the row with it —
+ * instead of staying a fixed pixel size while the room around them scales.
+ *
+ * Requires `.room { container-type: inline-size; }` in App.css so `cqw`
+ * resolves against the room's width rather than the viewport's.
+ */
+const BASE_SIZE_CQW = 7.5;
 
 /* ------------------------------------------------------------------ *
  * art_key -> sprite + relative size + how it was drawn
@@ -142,14 +153,14 @@ export function getClueArt(artKey, surface = DEFAULT_SURFACE, forceFlip = false)
     return { src: null, found: false, style: {} };
   }
 
-  const size = BASE_SIZE * meta.scale * surf.scale;
+  const size = BASE_SIZE_CQW * meta.scale * surf.scale;
   const mirrored = surf.mirror !== forceFlip; // XOR: surface mirror vs marker override
 
   return {
     src: `${BASE}/${meta.file}`,
     found: true,
     style: {
-      width: `${Math.round(size)}px`,
+      width: `${size.toFixed(2)}cqw`,
       height: 'auto',
       transform: mirrored ? 'scaleX(-1)' : 'none',
       filter: SHADOW[surf.shadow][meta.footprint], // unaffected by flip — shadow stays correct for the surface
@@ -168,16 +179,18 @@ export function hasClueArt(artKey) {
 const PANEL_SIZE = 128;
 
 /**
- * Resolve a clue's sprite for the detail panel — the large view shown when
- * a player clicks a marker. Deliberately ignores surface (no shelf/desk/
- * floor scaling) and shadow: those exist to sell placement *in the room*,
- * not in a flat UI panel. Every clue renders at the same panel size so the
- * panel layout never has to reflow around image size.
+ * Resolve a clue's sprite for a flat UI panel — the detail panel, or (at a
+ * smaller size) the inventory strip. Deliberately ignores surface (no
+ * shelf/desk/floor scaling) and shadow: those exist to sell placement *in
+ * the room*, not in flat UI. Every clue renders at the given size so panel
+ * and inventory layouts never have to reflow around image size.
  *
  * @param {string} artKey
+ * @param {number} size  px — defaults to full detail-panel size; pass a
+ *                       smaller value (e.g. 40) for inventory thumbnails
  * @returns {{ src: string|null, found: boolean, style: object }}
  */
-export function getPanelArt(artKey) {
+export function getPanelArt(artKey, size = PANEL_SIZE) {
   const meta = CLUE_META[artKey];
   if (!meta) {
     return { src: null, found: false, style: {} };
@@ -186,7 +199,7 @@ export function getPanelArt(artKey) {
     src: `${BASE}/${meta.file}`,
     found: true,
     style: {
-      width: `${PANEL_SIZE}px`,
+      width: `${size}px`,
       height: 'auto',
       imageRendering: 'pixelated',
       display: 'block',

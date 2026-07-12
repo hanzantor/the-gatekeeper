@@ -7,6 +7,7 @@ import { useState } from 'react'
 import { MARKERS } from './data/markers.js'
 import { getClueArt } from './data/clueArtMap.js'
 import ClueDetailPanel from './ClueDetailPanel.jsx'
+import Inventory from './Inventory.jsx'
 import './App.css'
 
 // TEST STUB: clue content, shaped exactly like the objects the real
@@ -67,40 +68,48 @@ function App() {
       </header>
 
       <main className="stage">
-        <div
-          className="room"
-          style={{ backgroundImage: `url(/${roomBackground})` }}
-        >
-          {MARKERS.map((m) => {
-            const artKey = placedClues[m.id]
-            const art = artKey ? getClueArt(artKey, m.surface) : null
-            const examined = artKey && examinedClues.has(artKey)
+        <div className="scene-row">
+          <Inventory
+            examinedKeys={[...examinedClues]}
+            details={CLUE_DETAILS}
+            onSelect={handleExamine}
+          />
 
-            return (
-              <button
-                key={m.id}
-                className={`clue-marker${examined ? ' clue-marker-examined' : ''}`}
-                style={{ left: `${m.x}%`, top: `${m.y}%` }}
-                data-zone={m.zone}
-                data-surface={m.surface}
-                onClick={() => handleExamine(artKey)}
-                aria-label={
-                  artKey ? `Examine ${artKey}` : `Examine marker ${m.id} (${m.zone})`
-                }
-              >
-                {art?.found ? (
-                  <img
-                    className="clue-sprite"
-                    src={art.src}
-                    alt={artKey}
-                    style={art.style}
-                  />
-                ) : (
-                  <span className="clue-dot" />
-                )}
-              </button>
-            )
-          })}
+          <div
+            className="room"
+            style={{ backgroundImage: `url(/${roomBackground})` }}
+          >
+            {MARKERS.map((m) => {
+              const artKey = placedClues[m.id]
+              const art = artKey ? getClueArt(artKey, m.surface) : null
+              const examined = artKey && examinedClues.has(artKey)
+
+              return (
+                <button
+                  key={m.id}
+                  className={`clue-marker${examined ? ' clue-marker-examined' : ''}`}
+                  style={{ left: `${m.x}%`, top: `${m.y}%` }}
+                  data-zone={m.zone}
+                  data-surface={m.surface}
+                  onClick={() => handleExamine(artKey)}
+                  aria-label={
+                    artKey ? `Examine ${artKey}` : `Examine marker ${m.id} (${m.zone})`
+                  }
+                >
+                  {art?.found ? (
+                    <img
+                      className="clue-sprite"
+                      src={art.src}
+                      alt={artKey}
+                      style={art.style}
+                    />
+                  ) : (
+                    <span className="clue-dot" />
+                  )}
+                </button>
+              )
+            })}
+          </div>
         </div>
 
         <section className="terminal">
