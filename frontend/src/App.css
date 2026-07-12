@@ -72,10 +72,13 @@ body {
 }
 
 .clue-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   position: absolute;
-  transform: translate(-50%, -50%);  /* so x/y is the dot's centre */
-  width: 34px;
-  height: 34px;
+  transform: translate(-50%, -50%);  /* so x/y is the dot's/sprite's centre */
+  min-width: 34px;
+  min-height: 34px;
   background: transparent;
   border: none;
   cursor: pointer;
@@ -99,6 +102,24 @@ body {
 @keyframes pulse {
   0%, 100% { opacity: 0.85; }
   50%      { opacity: 0.35; }
+}
+
+/* Clue sprite: shown at a marker when a clue is placed there.
+   Sized in % of the room so it scales with the background. Tweak --sprite-size
+   to taste once you see it in the room. */
+.clue-sprite {
+  width: 64px;                 /* starting size — adjust after first render */
+  height: auto;
+  image-rendering: pixelated;  /* keep pixel art crisp */
+  filter: drop-shadow(0 0 6px var(--amber-glow));
+  transition: filter 0.15s, transform 0.15s;
+}
+.clue-marker:hover .clue-sprite {
+  filter: drop-shadow(0 0 10px var(--amber)) drop-shadow(0 0 3px var(--amber));
+}
+/* Preserve the horizontal flip on hover for shelf_right sprites */
+.clue-marker:hover .clue-sprite[style*="scaleX(-1)"] {
+  transform: scaleX(-1) scale(1.08);
 }
 
 /* ── Terminal ── */
@@ -175,3 +196,105 @@ body {
 }
 .statusbar strong { color: var(--amber); }
 .statusbar-hint { font-style: italic; }
+
+/* ── Clue detail panel ── */
+.clue-panel-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  animation: panel-fade-in 0.12s ease-out;
+}
+@keyframes panel-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.clue-panel {
+  display: flex;
+  gap: 22px;
+  max-width: 460px;
+  padding: 24px;
+  background: var(--room-panel);
+  border: 1px solid var(--amber);
+  box-shadow: 0 0 40px var(--amber-glow) inset, 0 0 24px rgba(0, 0, 0, 0.5);
+  position: relative;
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+.clue-panel-close {
+  position: absolute;
+  top: 6px;
+  right: 10px;
+  background: none;
+  border: none;
+  color: var(--amber);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+.clue-panel-close:hover {
+  text-shadow: 0 0 8px var(--amber);
+}
+
+.clue-panel-image {
+  flex-shrink: 0;
+  width: 128px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 4px;
+}
+.clue-panel-image img {
+  filter: drop-shadow(0 0 6px var(--amber-glow));
+}
+.clue-panel-image-missing {
+  width: 64px;
+  height: 64px;
+  border: 1px dashed var(--room-line);
+}
+
+.clue-panel-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.clue-panel-name {
+  margin: 0 0 10px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 20px;
+  letter-spacing: 0.1em;
+  color: var(--amber);
+  text-transform: uppercase;
+}
+
+.clue-panel-description {
+  margin: 0 0 14px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--room-ink-dim);
+  font-style: italic;
+}
+
+.clue-panel-bullets {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--room-ink);
+}
+.clue-panel-bullets li {
+  padding-left: 16px;
+  position: relative;
+}
+.clue-panel-bullets li::before {
+  content: '›';
+  position: absolute;
+  left: 0;
+  color: var(--amber);
+}
