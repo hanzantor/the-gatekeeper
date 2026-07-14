@@ -39,7 +39,7 @@ def call_llm(system_prompt: str, user_prompt: str,
     }
 
     try:
-        response = requests.post(config.OLLAMA_URL, json=payload, timeout=120)
+        response = requests.post(config.OLLAMA_URL, json=payload, timeout=config.OLLAMA_TIMEOUT_SECONDS)
         response.raise_for_status()
     except requests.exceptions.RequestException as e:
         # Network/connection problem — surface a clear error rather than crashing.

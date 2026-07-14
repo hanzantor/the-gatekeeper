@@ -5,6 +5,13 @@
 # you won't need to change it unless you move Ollama elsewhere.
 OLLAMA_URL = "http://localhost:11434/api/chat"
 
+# ── Ollama timeout ──────────────────────────────────────────────
+# DeepSeek R1 spends real generation time on its <think> block before the
+# actual answer — on CPU-only inference, that adds up fast. 120s was too
+# tight for scenario generation specifically (structured JSON + fresh
+# prose for 4-6 clues). Raise further if your machine still times out.
+OLLAMA_TIMEOUT_SECONDS = 240
+
 # ── Model selection ────────────────────────────────────────────
 # The 8B/14B switch lives here. Change DEV_MODE to flip between them.
 #   True  → development model (8b)  — fast, for building and testing

@@ -3,52 +3,131 @@
 // placeholder dot (if not). STRUCTURE is fixed for every environment; only the
 // background image changes (office / hospital / government).
 
-import { useState } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { MARKERS } from './data/markers.js'
 import { getClueArt } from './data/clueArtMap.js'
+import { getScenario, GatekeeperClientError } from './api/gatekeeperClient.js'
 import ClueDetailPanel from './ClueDetailPanel.jsx'
 import Inventory from './Inventory.jsx'
+import PersonaSelect from './PersonaSelect.jsx'
+import GatekeeperCharacter from './GatekeeperCharacter.jsx'
+import GatekeeperDialogue from './GatekeeperDialogue.jsx'
 import './App.css'
 
-// TEST STUB: clue content, shaped exactly like the objects the real
-// /api/scenario response will send (the_gatekeeper_spec.md §5). When
-// Scenario Loading (Phase 3) wires in the live call, this object is
-// replaced by scenario.clues — ClueDetailPanel needs no changes, since it
-// only ever reads { art_key, name, description, properties }.
-const CLUE_DETAILS = {
-  storage_box: {
-    name: 'Storage Box',
-    description: 'A plain closed box with a fitted lid.',
-    properties: ['Sealed shut', 'No visible label', 'Sits on the shelf'],
-  },
-  document_folder: {
-    name: 'Document Folder',
-    description: 'A folded cardboard folder, unlabelled.',
-    properties: ['Contains a few loose papers', 'No name or date visible'],
-  },
-  access_badge: {
-    name: 'Access Badge',
-    description: 'A plastic ID badge on a clip, worn but legible.',
-    properties: ['No photo', 'Clip still functional', "Today's date printed"],
-  },
+// Maps the scenario's room_background value to an actual file in public/.
+// Only 'office' is confirmed to match a real file below — add hospital/
+// government once you've checked the exact filenames your Python actually
+// emits and what's actually sitting in public/.
+const BACKGROUND_FILES = {
+  office: 'room-office.png',
+  hospital: 'room-hospital.png',
+  government: 'room-government.png',
+}
+const DEFAULT_BACKGROUND = 'room-office.png'
+
+function resolveBackground(roomBackground) {
+  const file = BACKGROUND_FILES[roomBackground]
+  if (!file) {
+    console.warn(
+      `No background mapped for room_background "${roomBackground}" — falling back to office. ` +
+      `Add the real filename to BACKGROUND_FILES once you know it.`
+    )
+    return DEFAULT_BACKGROUND
+  }
+  return file
+}
+
+// Fisher-Yates — scatters each session's clues across different markers
+// rather than always landing on the same few positions. Markers that
+// don't get a clue stay empty (pulsing dot) for now — misdirection/filler
+// objects are a later addition per spec_patch_marker_system.md.
+function shuffle(array) {
+  const a = [...array]
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[a[i], a[j]] = [a[j], a[i]]
+  }
+  return a
+}
+
+// scenario.clues[].properties comes back from the backend as an evidence
+// object for the Python evidence-checker (e.g. { dated_today: true,
+// signed_by: "..." }) — written for machine matching, not as player-facing
+// bullets. This is a stop-gap humaniser so the detail panel shows
+// *something* readable either way. See the note after this file about
+// whether the scenario generator should instead write dedicated display
+// bullets directly.
+function humanizeProperties(properties) {
+  if (Array.isArray(properties)) return properties
+  if (properties && typeof properties === 'object') {
+    return Object.entries(properties).map(([key, value]) => {
+      const label = key.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+      if (value === true) return label
+      if (value === false) return `Not ${label}`
+      return `${label}: ${value}`
+    })
+  }
+  return []
 }
 
 function App() {
   const [turnsRemaining] = useState(15)
   const [selectedArtKey, setSelectedArtKey] = useState(null)
   const [examinedClues, setExaminedClues] = useState(() => new Set())
+  const [persona, setPersona] = useState(null)
+  const [talking, setTalking] = useState(false)
 
-  // Which environment background to show. Later the scenario picks this.
-  const roomBackground = 'room-office.png'
+  const [scenario, setScenario] = useState(null)
+  const [scenarioLoading, setScenarioLoading] = useState(false)
+  const [scenarioError, setScenarioError] = useState(null)
 
-  // TEST STUB: which clue sits on which marker id.
-  // Hand-edit this to try sprites out. Later the scenario loader fills it in.
-  // marker id -> clue art_key (must exist in CLUE_META in clueArtMap.js)
-  const placedClues = {
-    0:  'storage_box',        // shelf_left
-    1:  'document_folder',    // shelf_right (mirrored)
-    16: 'access_badge',
+  // Gatekeeper character position, room-relative % — not part of MARKERS
+  // since it isn't a clue. Eyeball these two numbers against your door's
+  // actual position and adjust until it lines up.
+  const GATEKEEPER_POSITION = { x: 46, y: 42 }
+
+  function loadScenario(chosenPersona) {
+    setScenarioLoading(true)
+    setScenarioError(null)
+    getScenario(chosenPersona)
+      .then(setScenario)
+      .catch((err) => {
+        setScenarioError(
+          err instanceof GatekeeperClientError
+            ? err.message
+            : 'Something went wrong generating the scenario.'
+        )
+      })
+      .finally(() => setScenarioLoading(false))
   }
+
+  // Fires once, right after a persona is chosen.
+  useEffect(() => {
+    if (persona) loadScenario(persona)
+  }, [persona])
+
+  const placedClues = useMemo(() => {
+    if (!scenario) return {}
+    const shuffledIds = shuffle(MARKERS.map((m) => m.id))
+    const map = {}
+    scenario.clues.forEach((clue, i) => {
+      map[shuffledIds[i]] = clue.art_key
+    })
+    return map
+  }, [scenario])
+
+  const clueDetails = useMemo(() => {
+    if (!scenario) return {}
+    const map = {}
+    scenario.clues.forEach((clue) => {
+      map[clue.art_key] = {
+        name: clue.name,
+        description: clue.description,
+        properties: humanizeProperties(clue.properties),
+      }
+    })
+    return map
+  }, [scenario])
 
   function handleExamine(artKey) {
     if (!artKey) return // empty/misdirection/filler markers — no content yet
@@ -57,9 +136,46 @@ function App() {
   }
 
   const selectedClue = selectedArtKey
-    ? { art_key: selectedArtKey, ...CLUE_DETAILS[selectedArtKey] }
+    ? { art_key: selectedArtKey, ...clueDetails[selectedArtKey] }
     : null
 
+  // -- Screen 1: no persona chosen yet --
+  if (!persona) {
+    return <PersonaSelect onSelect={setPersona} />
+  }
+
+  // -- Screen 2: scenario is generating --
+  if (scenarioLoading || (!scenario && !scenarioError)) {
+    return (
+      <div className="persona-select">
+        <div className="persona-select-inner">
+          <h1 className="persona-select-title">THE GATEKEEPER</h1>
+          <p className="persona-select-subtitle">Generating your scenario…</p>
+        </div>
+      </div>
+    )
+  }
+
+  // -- Screen 3: scenario generation failed --
+  if (scenarioError) {
+    return (
+      <div className="persona-select">
+        <div className="persona-select-inner">
+          <h1 className="persona-select-title">THE GATEKEEPER</h1>
+          <p className="persona-select-subtitle">{scenarioError}</p>
+          <button
+            className="persona-card"
+            style={{ maxWidth: 220, margin: '0 auto' }}
+            onClick={() => loadScenario(persona)}
+          >
+            <span className="persona-card-name">Retry</span>
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // -- Screen 4: the room --
   return (
     <div className="app">
       <header className="titlebar">
@@ -71,13 +187,13 @@ function App() {
         <div className="scene-row">
           <Inventory
             examinedKeys={[...examinedClues]}
-            details={CLUE_DETAILS}
+            details={clueDetails}
             onSelect={handleExamine}
           />
 
           <div
             className="room"
-            style={{ backgroundImage: `url(/${roomBackground})` }}
+            style={{ backgroundImage: `url(/${resolveBackground(scenario.room_background)})` }}
           >
             {MARKERS.map((m) => {
               const artKey = placedClues[m.id]
@@ -109,32 +225,25 @@ function App() {
                 </button>
               )
             })}
+
+            <GatekeeperCharacter
+              x={GATEKEEPER_POSITION.x}
+              y={GATEKEEPER_POSITION.y}
+              onClick={() => setTalking(true)}
+            />
           </div>
         </div>
-
-        <section className="terminal">
-          <div className="terminal-header">
-            <span className="terminal-dot" />
-            GATEKEEPER TERMINAL
-          </div>
-          <div className="terminal-body">
-            <p className="gatekeeper-line">
-              State your business. The door does not open for those who cannot explain themselves.
-            </p>
-          </div>
-          <div className="terminal-input">
-            <input type="text" placeholder="Type your response…" className="terminal-field" />
-            <button className="terminal-send">SEND</button>
-          </div>
-        </section>
       </main>
 
       <footer className="statusbar">
         <span>Turns remaining: <strong>{turnsRemaining}</strong></span>
-        <span className="statusbar-hint">Examine the room. Make your case.</span>
+        <span className="statusbar-hint">
+          {talking ? 'Type your response below.' : 'Click the Gatekeeper to speak.'}
+        </span>
       </footer>
 
       <ClueDetailPanel clue={selectedClue} onClose={() => setSelectedArtKey(null)} />
+      {talking && <GatekeeperDialogue onClose={() => setTalking(false)} />}
     </div>
   )
 }
