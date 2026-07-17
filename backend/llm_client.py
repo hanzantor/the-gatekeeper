@@ -11,7 +11,8 @@ import config
 
 def call_llm(system_prompt: str, user_prompt: str,
              temperature: float = config.GATEKEEPER_TEMPERATURE,
-             model: str = None) -> str:
+             model: str = None,
+             max_tokens: int = config.MAX_TOKENS) -> str:
     """
     Send a system + user prompt to the local model and return clean text.
 
@@ -34,7 +35,7 @@ def call_llm(system_prompt: str, user_prompt: str,
         "stream": False,
         "options": {
             "temperature": temperature,
-            "num_predict": config.MAX_TOKENS,
+            "num_predict": max_tokens,
         },
     }
 

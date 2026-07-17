@@ -39,6 +39,7 @@ def generate_scenario(persona: str, seed: str = "") -> dict:
         system_prompt=system_prompt,
         user_prompt=user_prompt,
         temperature=config.SCENARIO_TEMPERATURE,
+        max_tokens=config.SCENARIO_MAX_TOKENS,
     )
 
     # The model returns JSON. Parse it, with a fallback if it misbehaves.
@@ -62,7 +63,8 @@ def build_scenario_prompt(persona: str, selected_clues: list, room: str, seed: s
     """Build the system + user prompt for scenario generation."""
     system = (
         "You write game scenarios for The Gatekeeper. "
-        "Output valid JSON only. No preamble. No markdown fences."
+        "Output valid JSON only. No preamble. No markdown fences. "
+        "Do not include any <think> reasoning. Respond with the JSON object immediately."
     )
 
     # Give the model just the id + role of each pre-chosen clue.
@@ -104,9 +106,10 @@ def parse_scenario_json(raw: str, fallback_clues: list) -> dict:
     Parse the model's JSON output. If it fails, return a safe fallback so a
     single bad generation never crashes the game.
     """
+
     # Models sometimes wrap JSON in ```json fences despite instructions — strip them.
     cleaned = raw.strip()
-    if cleaned.startswith("```"):
+    if cleaned.startswith("```"): 
         cleaned = cleaned.split("```")[1] if "```" in cleaned[3:] else cleaned
         cleaned = cleaned.replace("json", "", 1).strip()
 

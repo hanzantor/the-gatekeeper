@@ -30,7 +30,8 @@ ACTIVE_MODEL = MODEL_DEV if DEV_MODE else MODEL_EVAL
 # variety, the Gatekeeper a touch lower for consistent reasoning.
 GATEKEEPER_TEMPERATURE = 0.7   # the agent's per-turn reasoning
 SCENARIO_TEMPERATURE   = 0.8   # scenario generation — slightly more creative
-MAX_TOKENS = 800               # cap on response length (num_predict in Ollama)
+MAX_TOKENS = 800               # Gatekeeper per-turn replies
+SCENARIO_MAX_TOKENS = 5000     # scenario generation — R1 needs room to think AND write JSON
 
 # ── Game rules ─────────────────────────────────────────────────
 DEFAULT_TURN_LIMIT = 15        # turns before DENY_FINAL

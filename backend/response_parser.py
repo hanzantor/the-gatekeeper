@@ -55,16 +55,14 @@ def parse_gatekeeper_response(raw: str) -> dict:
 
 
 def _extract_field(text: str, label: str) -> str:
-    """
-    Pull the text following 'LABEL:' up to the next known label or end of text.
-    Case-insensitive on the label. Returns '' if not found.
-    """
-    # Match 'LABEL:' then capture everything until the next label or end.
-    pattern = rf"{label}\s*:\s*(.*?)(?=\n\s*(?:REASONING|RESPONSE|DECISION)\s*:|$)"
+    # Tolerate markdown bold/whitespace around labels: **LABEL:**, LABEL :, etc.
+    pattern = (
+        rf"\*{{0,2}}{label}\*{{0,2}}\s*:\s*"
+        rf"(.*?)(?=\n\s*\*{{0,2}}(?:REASONING|RESPONSE|DECISION)\*{{0,2}}\s*:|$)"
+    )
     match = re.search(pattern, text, flags=re.IGNORECASE | re.DOTALL)
     if match:
-        # Strip surrounding brackets the model sometimes includes, e.g. [text].
-        return match.group(1).strip().strip("[]").strip()
+        return match.group(1).strip().strip("*").strip("[]").strip()
     return ""
 
 
@@ -85,7 +83,12 @@ decision: [WARN]"""
     broken = """REASONING: Unclear situation.
 RESPONSE: I'm not sure I believe you."""
 
-    for label, sample in [("GOOD", good), ("MESSY", messy), ("BROKEN", broken)]:
+# 4. R1's markdown-bold labels — the real-world case
+    bolded = """**REASONING:** The pry bar explanation resolves the contradiction but concerns remain.
+**RESPONSE:** I see you now explain the pry bar. I remain cautious.
+**DECISION:** ACCEPT_CLAIM"""
+
+    for label, sample in [("GOOD", good), ("MESSY", messy), ("BROKEN", broken), ("BOLDED", bolded)]:
         result = parse_gatekeeper_response(sample)
         print(f"\n--- {label} ---")
         print(f"  reasoning: {result['reasoning'][:50]}...")
@@ -96,4 +99,8 @@ RESPONSE: I'm not sure I believe you."""
     assert parse_gatekeeper_response(good)["decision_type"] == "GRANT_EXIT"
     assert parse_gatekeeper_response(messy)["decision_type"] == "WARN"
     assert parse_gatekeeper_response(broken)["decision_type"] == "REQUEST_EVIDENCE"
+    assert parse_gatekeeper_response(bolded)["decision_type"] == "ACCEPT_CLAIM"
+    r = parse_gatekeeper_response(bolded)
+    assert "RESPONSE" not in r["reasoning"], "reasoning leaked into next field"
+    assert "DECISION" not in r["response"], "decision leaked into response"
     print("\n✓ Parser handles clean, messy, and broken responses correctly.")
