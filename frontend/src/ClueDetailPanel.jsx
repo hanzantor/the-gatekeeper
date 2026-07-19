@@ -1,18 +1,19 @@
 // ClueDetailPanel.jsx — shown when the player clicks an examinable clue.
 //
-// Layout: object sprite in the top-left, name + description + a bulleted
-// list of properties on the right. The bullets are the load-bearing part —
-// they're what the player actually reads and reasons from when deciding
-// what to say to the Gatekeeper.
+// Layout: object sprite in the top-left, name + description + story detail +
+// a bulleted list of properties on the right. The `detail` paragraph is the
+// narrative texture (who a phone called, who signed a letter) that makes each
+// clue feel like it belongs to a real situation; the bullets are the terse,
+// machine-readable properties the player reasons from.
 //
-// `clue` shape (matches what the real /api/scenario response will send,
-// per the_gatekeeper_spec.md §5 — this component needs no changes when the
-// test stub is swapped for live scenario data):
+// `clue` shape (matches the live /api/scenario response, spec §5):
 //   {
-//     art_key: 'storage_box',
-//     name: 'Storage Box',
-//     description: 'A plain closed box with a fitted lid.',
-//     properties: ['Sealed shut', 'No visible label', 'Sits on the shelf'],
+//     art_key: 'burner_phone',
+//     name: 'Disposable Smartphone',
+//     description: 'A cheap prepaid phone.',
+//     detail: 'Its call log shows three calls to a "D. Evans" between
+//              01:40 and 02:05 last night, all under a minute.',
+//     properties: ['Calls to D. Evans', 'Last used 02:05', 'No contacts saved'],
 //   }
 
 import { getPanelArt } from './data/clueArtMap.js'
@@ -47,6 +48,10 @@ function ClueDetailPanel({ clue, onClose }) {
 
           {clue.description && (
             <p className="clue-panel-description">{clue.description}</p>
+          )}
+
+          {clue.detail && (
+            <p className="clue-panel-detail">{clue.detail}</p>
           )}
 
           {clue.properties?.length > 0 && (
