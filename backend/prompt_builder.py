@@ -3,10 +3,12 @@
 # persona, the scenario, the live game state, the memory window, and the
 # evidence check into one instruction, then hands back (system, user) prompts.
 #
-# The Gatekeeper now receives, per examined clue, BOTH:
-#   - the machine-readable properties (the strict evidence check), and
-#   - the narrative detail (who a phone called, who signed a letter) so its
-#     reasoning can engage with the actual story of the room, not just flags.
+# The Gatekeeper receives, per examined clue, BOTH:
+#   - the concrete detail points the player can also read (names, dates,
+#     reference numbers), so its reasoning engages with the actual situation
+#     rather than abstract flags, and
+#   - the machine-readable properties (the strict evidence check), which
+#     remain the source of truth for what is verified.
 
 import config
 from personas import PERSONA_PROMPTS
@@ -54,7 +56,7 @@ TURN: {game_state.get('turn', 1)} of {config.DEFAULT_TURN_LIMIT} \
 PLAYER INVENTORY: {game_state.get('player_inventory', [])}
 EXAMINED OBJECTS: {game_state.get('examined_objects', [])}
 
-WHAT THE PLAYER HAS SEEN IN THE ROOM (narrative detail):
+WHAT THE PLAYER HAS EXAMINED (the details they can see):
 {clue_context}
 
 EVIDENCE CHECK (verified facts — the source of truth):
@@ -67,12 +69,12 @@ PLAYER JUST SAID:
 "{game_state.get('player_input', '')}"
 
 Before responding, check the player's latest claim against BOTH the physical
-evidence AND everything they have said earlier. Use the narrative detail of the
-objects to reason concretely — refer to the specifics (names, times, what a
-document says) when they matter. If a claim contradicts the evidence or a prior
-statement, surface that. If new evidence or a sound argument now vindicates an
-earlier doubt, update in their favour — but only when genuinely warranted, not
-merely because they insisted.
+evidence AND everything they have said earlier. Reason concretely — cite the
+specific details that matter (names, dates, reference numbers, what a document
+states) rather than speaking in generalities. If a claim contradicts the
+evidence or a prior statement, surface that. If new evidence or a sound
+argument now vindicates an earlier doubt, update in their favour — but only
+when genuinely warranted, not merely because they insisted.
 
 Respond as the Gatekeeper. Reason first, then respond.
 If the player has made a convincing case — given your character, this scenario,
@@ -83,31 +85,39 @@ and the evidence — grant exit. Do not grant exit unless you genuinely judge it
 
 def format_clue_context(clues: list, examined_objects: list) -> str:
     """
-    Summarise the story detail of the clues the player has actually examined.
+    Summarise the detail points of the clues the player has actually examined.
 
-    The Gatekeeper only 'knows' about an object once the player has examined
-    it (mirrors what the player can see). Each line gives the object's name and
-    its narrative detail so the agent can reason about the actual story, not
-    just abstract property flags.
+    The Gatekeeper only 'knows' about an object once the player has examined it
+    (mirrors what the player can see). Each entry lists the object's name and
+    its concrete detail points, so the agent reasons about the same particulars
+    the player is looking at.
     """
     if not clues:
         return "(no clue data available)"
 
-    # Match examined ids against the scenario's clues (by id or art_key).
     examined = set(examined_objects or [])
-    lines = []
+    blocks = []
     for clue in clues:
         cid = clue.get("id")
         akey = clue.get("art_key")
         if examined and cid not in examined and akey not in examined:
             continue
-        name = clue.get("name", cid or "object")
-        detail = clue.get("detail") or clue.get("description") or ""
-        lines.append(f"  - {name}: {detail}")
 
-    if not lines:
+        name = clue.get("name", cid or "object")
+        lines = [f"  {name}:"]
+
+        points = clue.get("detail_points") or []
+        if points:
+            for point in points:
+                lines.append(f"    - {point}")
+        elif clue.get("description"):
+            lines.append(f"    - {clue['description']}")
+
+        blocks.append("\n".join(lines))
+
+    if not blocks:
         return "(the player has not examined any objects yet)"
-    return "\n".join(lines)
+    return "\n".join(blocks)
 
 
 def format_history(history: list) -> str:
@@ -151,13 +161,28 @@ if __name__ == "__main__":
     fake_state = {
         "scenario": {
             "gatekeeper_role": "Head of Security, Meridian Research Institute",
-            "suspicion_context": "Unauthorised access detected at 02:10. Player found near the archive at 02:14.",
+            "suspicion_context": "Unauthorised access detected at 02:10.",
             "player_backstory": "The player claims to be a contracted IT auditor on a late-night systems check.",
             "clues": [
-                {"id": "obj_audit_letter", "name": "Audit Letter",
-                 "detail": "A printed letter dated today, signed by the Director of Operations, authorising a systems audit between 02:00 and 04:00."},
-                {"id": "obj_crowbar", "name": "Pry Bar",
-                 "detail": "A short steel pry bar leaning by the door frame, which shows two fresh gouges near the lock."},
+                {
+                    "id": "obj_audit_letter",
+                    "name": "Audit Letter",
+                    "description": "A printed authorisation letter.",
+                    "detail_points": [
+                        "Signed by the Director of Operations",
+                        "Dated today",
+                        "Authorises a systems audit 02:00-04:00",
+                    ],
+                },
+                {
+                    "id": "obj_crowbar",
+                    "name": "Pry Bar",
+                    "description": "A short steel pry bar.",
+                    "detail_points": [
+                        "Two fresh gouges near the tip",
+                        "No asset tag or tool-room marking",
+                    ],
+                },
             ],
         },
         "turn": 4,
@@ -184,6 +209,7 @@ if __name__ == "__main__":
 
     assert "Head of Security" in user
     assert "Pry Bar" in user
-    assert "fresh gouges" in user  # narrative detail made it into the prompt
+    assert "fresh gouges" in user          # detail points reached the prompt
+    assert "signed_by=Director" in user    # machine properties still present
     print("\n" + "=" * 60)
-    print("Prompt assembled correctly, with clue narrative detail included.")
+    print("Prompt assembled correctly, with detail points and evidence flags.")

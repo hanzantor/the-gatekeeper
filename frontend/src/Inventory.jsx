@@ -1,14 +1,14 @@
 // Inventory.jsx — thumbnail strip of clues the player has examined this
 // session (the_gatekeeper_spec.md §7: "Inventory panel: thumbnails of
 // examined objects this session"). Clicking a thumbnail reopens that
-// clue's detail panel — useful once the room has more than a couple of
-// examined objects and the player wants to re-check something before
-// answering the Gatekeeper.
+// clue's detail panel.
 //
-// `details` is keyed the same way as ClueDetailPanel's data: art_key ->
-// { name, description, properties }. Only `name` is used here, and it's
-// optional — an examined clue with no name yet (not in the stub, or not
-// yet returned by the scenario) just falls back to showing its art_key.
+// KEYING NOTE: entries are keyed by clue `id`, not `art_key` — several clues
+// share a sprite, so art_key is not unique within a scenario. The sprite is
+// looked up via the clue record's own art_key field instead.
+//
+// `details` is keyed the same way as ClueDetailPanel's data: clue id ->
+// { id, art_key, name, description, detail_points }.
 
 import { getPanelArt } from './data/clueArtMap.js'
 
@@ -26,15 +26,16 @@ function Inventory({ examinedKeys, details, onSelect }) {
         {examinedKeys.length === 0 ? (
           <p className="inventory-empty">Nothing examined yet.</p>
         ) : (
-          examinedKeys.map((artKey) => {
-            const art = getPanelArt(artKey, THUMB_SIZE)
-            const label = details?.[artKey]?.name ?? artKey
+          examinedKeys.map((clueId) => {
+            const clue = details?.[clueId]
+            const art = getPanelArt(clue?.art_key, THUMB_SIZE)
+            const label = clue?.name ?? clueId
 
             return (
               <button
-                key={artKey}
+                key={clueId}
                 className="inventory-item"
-                onClick={() => onSelect(artKey)}
+                onClick={() => onSelect(clueId)}
                 aria-label={`Reopen ${label}`}
                 title={label}
               >

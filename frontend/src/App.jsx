@@ -2,6 +2,12 @@
 // markers shows either a clue SPRITE (if a clue is placed there) or a pulsing
 // placeholder dot (if not). STRUCTURE is fixed for every environment; only the
 // background image changes (office / hospital / government).
+//
+// KEYING NOTE: clues are keyed throughout by their scenario `id`, never by
+// `art_key`. Several library clues deliberately share a sprite (the sprite set
+// is smaller than the clue catalogue), so keying by art_key caused the second
+// clue to overwrite the first — two markers showing the same sprite AND the
+// same text. `id` is unique per clue; `art_key` is not.
 
 import { useState, useEffect, useMemo } from 'react'
 import { MARKERS } from './data/markers.js'
@@ -14,14 +20,11 @@ import GatekeeperCharacter from './GatekeeperCharacter.jsx'
 import GatekeeperDialogue from './GatekeeperDialogue.jsx'
 import './App.css'
 
-// Maps the scenario's room_background value to an actual file in public/.
-// Only 'office' is confirmed to match a real file below — add hospital/
-// government once you've checked the exact filenames your Python actually
-// emits and what's actually sitting in public/.
 const BACKGROUND_FILES = {
   office: 'room-office.png',
   hospital: 'room-hospital.png',
   government: 'room-government.png',
+  research_lab: 'room-office.png', // no dedicated lab background yet
 }
 const DEFAULT_BACKGROUND = 'room-office.png'
 
@@ -29,8 +32,7 @@ function resolveBackground(roomBackground) {
   const file = BACKGROUND_FILES[roomBackground]
   if (!file) {
     console.warn(
-      `No background mapped for room_background "${roomBackground}" — falling back to office. ` +
-      `Add the real filename to BACKGROUND_FILES once you know it.`
+      `No background mapped for room_background "${roomBackground}" — falling back to office.`
     )
     return DEFAULT_BACKGROUND
   }
@@ -50,29 +52,9 @@ function shuffle(array) {
   return a
 }
 
-// scenario.clues[].properties comes back from the backend as an evidence
-// object for the Python evidence-checker (e.g. { dated_today: true,
-// signed_by: "..." }) — written for machine matching, not as player-facing
-// bullets. This is a stop-gap humaniser so the detail panel shows
-// *something* readable either way. See the note after this file about
-// whether the scenario generator should instead write dedicated display
-// bullets directly.
-function humanizeProperties(properties) {
-  if (Array.isArray(properties)) return properties
-  if (properties && typeof properties === 'object') {
-    return Object.entries(properties).map(([key, value]) => {
-      const label = key.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
-      if (value === true) return label
-      if (value === false) return `Not ${label}`
-      return `${label}: ${value}`
-    })
-  }
-  return []
-}
-
 function App() {
   const [turnsRemaining] = useState(15)
-  const [selectedArtKey, setSelectedArtKey] = useState(null)
+  const [selectedClueId, setSelectedClueId] = useState(null)
   const [examinedClues, setExaminedClues] = useState(() => new Set())
   const [persona, setPersona] = useState(null)
   const [talking, setTalking] = useState(false)
@@ -81,14 +63,15 @@ function App() {
   const [scenarioLoading, setScenarioLoading] = useState(false)
   const [scenarioError, setScenarioError] = useState(null)
 
-  // Gatekeeper character position, room-relative % — not part of MARKERS
-  // since it isn't a clue. Eyeball these two numbers against your door's
-  // actual position and adjust until it lines up.
+  // Gatekeeper character position, room-relative %.
   const GATEKEEPER_POSITION = { x: 46, y: 42 }
 
   function loadScenario(chosenPersona) {
     setScenarioLoading(true)
     setScenarioError(null)
+    // A new scenario means a new session — clear anything from the last one.
+    setExaminedClues(new Set())
+    setSelectedClueId(null)
     getScenario(chosenPersona)
       .then(setScenario)
       .catch((err) => {
@@ -106,38 +89,41 @@ function App() {
     if (persona) loadScenario(persona)
   }, [persona])
 
+  // markerId -> clue id. Keyed by clue id so two clues sharing a sprite
+  // still occupy two distinct markers with their own content.
   const placedClues = useMemo(() => {
     if (!scenario) return {}
     const shuffledIds = shuffle(MARKERS.map((m) => m.id))
     const map = {}
     scenario.clues.forEach((clue, i) => {
-      map[shuffledIds[i]] = clue.art_key
+      map[shuffledIds[i]] = clue.id
     })
     return map
   }, [scenario])
 
+  // clue id -> full clue record for the detail panel and inventory.
   const clueDetails = useMemo(() => {
     if (!scenario) return {}
     const map = {}
     scenario.clues.forEach((clue) => {
-      map[clue.art_key] = {
+      map[clue.id] = {
+        id: clue.id,
+        art_key: clue.art_key,
         name: clue.name,
         description: clue.description,
-        properties: humanizeProperties(clue.properties),
+        detail_points: clue.detail_points ?? [],
       }
     })
     return map
   }, [scenario])
 
-  function handleExamine(artKey) {
-    if (!artKey) return // empty/misdirection/filler markers — no content yet
-    setSelectedArtKey(artKey)
-    setExaminedClues((prev) => new Set(prev).add(artKey))
+  function handleExamine(clueId) {
+    if (!clueId) return // empty/misdirection/filler markers — no content yet
+    setSelectedClueId(clueId)
+    setExaminedClues((prev) => new Set(prev).add(clueId))
   }
 
-  const selectedClue = selectedArtKey
-    ? { art_key: selectedArtKey, ...clueDetails[selectedArtKey] }
-    : null
+  const selectedClue = selectedClueId ? clueDetails[selectedClueId] : null
 
   // -- Screen 1: no persona chosen yet --
   if (!persona) {
@@ -196,9 +182,10 @@ function App() {
             style={{ backgroundImage: `url(/${resolveBackground(scenario.room_background)})` }}
           >
             {MARKERS.map((m) => {
-              const artKey = placedClues[m.id]
-              const art = artKey ? getClueArt(artKey, m.surface) : null
-              const examined = artKey && examinedClues.has(artKey)
+              const clueId = placedClues[m.id]
+              const clue = clueId ? clueDetails[clueId] : null
+              const art = clue ? getClueArt(clue.art_key, m.surface) : null
+              const examined = clueId && examinedClues.has(clueId)
 
               return (
                 <button
@@ -207,16 +194,16 @@ function App() {
                   style={{ left: `${m.x}%`, top: `${m.y}%` }}
                   data-zone={m.zone}
                   data-surface={m.surface}
-                  onClick={() => handleExamine(artKey)}
+                  onClick={() => handleExamine(clueId)}
                   aria-label={
-                    artKey ? `Examine ${artKey}` : `Examine marker ${m.id} (${m.zone})`
+                    clue ? `Examine ${clue.name}` : `Examine marker ${m.id} (${m.zone})`
                   }
                 >
                   {art?.found ? (
                     <img
                       className="clue-sprite"
                       src={art.src}
-                      alt={artKey}
+                      alt={clue.name}
                       style={art.style}
                     />
                   ) : (
@@ -242,7 +229,7 @@ function App() {
         </span>
       </footer>
 
-      <ClueDetailPanel clue={selectedClue} onClose={() => setSelectedArtKey(null)} />
+      <ClueDetailPanel clue={selectedClue} onClose={() => setSelectedClueId(null)} />
       {talking && <GatekeeperDialogue onClose={() => setTalking(false)} />}
     </div>
   )

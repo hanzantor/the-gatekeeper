@@ -1,19 +1,27 @@
 // ClueDetailPanel.jsx — shown when the player clicks an examinable clue.
 //
-// Layout: object sprite in the top-left, name + description + story detail +
-// a bulleted list of properties on the right. The `detail` paragraph is the
-// narrative texture (who a phone called, who signed a letter) that makes each
-// clue feel like it belongs to a real situation; the bullets are the terse,
-// machine-readable properties the player reasons from.
+// Layout: object sprite in the top-left, name + one-line description + a
+// bulleted list of concrete details on the right. The bullets are the
+// load-bearing part — they're what the player actually reads and reasons
+// from when deciding what to say to the Gatekeeper.
+//
+// NOTE: the clue's machine-readable `properties` are deliberately NOT shown.
+// Those flags exist for the Python evidence checker and the Gatekeeper's
+// cross-reference; rendering them to the player leaked the clue's role
+// ("Neutral") and produced inverted-negative artefacts ("Not Not Standard").
+// `detail_points` is the player-facing channel; `properties` is the machine one.
 //
 // `clue` shape (matches the live /api/scenario response, spec §5):
 //   {
-//     art_key: 'burner_phone',
-//     name: 'Disposable Smartphone',
-//     description: 'A cheap prepaid phone.',
-//     detail: 'Its call log shows three calls to a "D. Evans" between
-//              01:40 and 02:05 last night, all under a minute.',
-//     properties: ['Calls to D. Evans', 'Last used 02:05', 'No contacts saved'],
+//     art_key: 'work_order',
+//     name: 'Access Authorization',
+//     description: 'A work order granting access to restricted areas.',
+//     detail_points: [
+//       'Work Order #73456, issued 12 April',
+//       'Signed by the Head of Security',
+//       'Covers equipment calibration in Section C-8',
+//       'Valid until 1 May',
+//     ],
 //   }
 
 import { getPanelArt } from './data/clueArtMap.js'
@@ -22,6 +30,7 @@ function ClueDetailPanel({ clue, onClose }) {
   if (!clue) return null
 
   const art = getPanelArt(clue.art_key)
+  const points = clue.detail_points ?? []
 
   return (
     <div className="clue-panel-backdrop" onClick={onClose}>
@@ -50,13 +59,9 @@ function ClueDetailPanel({ clue, onClose }) {
             <p className="clue-panel-description">{clue.description}</p>
           )}
 
-          {clue.detail && (
-            <p className="clue-panel-detail">{clue.detail}</p>
-          )}
-
-          {clue.properties?.length > 0 && (
+          {points.length > 0 && (
             <ul className="clue-panel-bullets">
-              {clue.properties.map((point, i) => (
+              {points.map((point, i) => (
                 <li key={i}>{point}</li>
               ))}
             </ul>

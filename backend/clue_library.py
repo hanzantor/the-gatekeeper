@@ -11,10 +11,9 @@ import random
 
 # ── The clue catalogue ─────────────────────────────────────────
 # Each clue has:
-#   id       — unique identifier used in game state
+#   id       — unique identifier used in game state (the key for everything)
 #   art_key  — maps to a sprite file in frontend/public/clues/<art_key>.png
-#              (these MUST match the actual filenames produced by the art
-#              pipeline — see the 25 sprites in public/clues/)
+#              (MUST match the actual filenames produced by the art pipeline)
 #   role     — its function in the Gatekeeper's reasoning:
 #              supporting   = helps a legitimate exit claim
 #              identity     = supports WHO the player is (rarely enough alone)
@@ -23,9 +22,11 @@ import random
 #   name     — a default human-readable name (the LLM may reword per scenario)
 #   room     — "shared" (any room) or a specific room it only appears in
 #
-# NOTE: a few art_key values are deliberate stand-ins where no dedicated
-# sprite exists yet (e.g. sample_vial -> torch). They point at a REAL file
-# so the clue always renders; refine them if/when more sprites are produced.
+# NOTE ON SHARED SPRITES: several clues deliberately reuse the same art_key
+# because the sprite set (25 files) is smaller than the clue catalogue (26
+# entries). select_clues() therefore refuses to put two clues that share an
+# art_key into the SAME scenario — otherwise the room shows two identical
+# sprites, which reads as a rendering bug rather than a design choice.
 
 CLUE_LIBRARY = [
     # ---- SUPPORTING (shared pool) ----
@@ -47,12 +48,17 @@ CLUE_LIBRARY = [
     {"id": "notebook",            "art_key": "notebook",           "role": "neutral",      "name": "Half-Finished Notebook", "room": "shared"},
     {"id": "jacket",              "art_key": "jacket",             "role": "neutral",      "name": "Jacket on a Chair",      "room": "shared"},
     {"id": "wall_clock",          "art_key": "wall_clock",         "role": "neutral",      "name": "Wall Clock",             "room": "shared"},
+    {"id": "food_wrapper",        "art_key": "food_wrapper",       "role": "neutral",      "name": "Food Wrapper",           "room": "shared"},
+    {"id": "framed_photo",        "art_key": "framed_photo",       "role": "neutral",      "name": "Framed Photo",           "room": "shared"},
+    {"id": "potted_plant",        "art_key": "potted_plant",       "role": "neutral",      "name": "Potted Plant",           "room": "shared"},
 
     # ---- INCRIMINATING (shared pool) ----
-    {"id": "pry_bar",             "art_key": "pry_bar",            "role": "incriminating", "name": "Pry Bar by the Door",   "room": "shared"},
+    {"id": "pry_bar",             "art_key": "pry_bar",            "role": "incriminating", "name": "Pry Bar",               "room": "shared"},
     {"id": "wrong_keycard",       "art_key": "access_badge",       "role": "incriminating", "name": "Someone Else's Keycard","room": "shared"},
     {"id": "burner_phone",        "art_key": "burner_phone",       "role": "incriminating", "name": "Burner Phone",          "room": "shared"},
     {"id": "gloves",              "art_key": "gloves",             "role": "incriminating", "name": "Gloves",                "room": "shared"},
+    {"id": "torch",               "art_key": "torch",              "role": "incriminating", "name": "Torch",                 "room": "shared"},
+    {"id": "phone_message",       "art_key": "phone_message",      "role": "incriminating", "name": "Phone With a Message",  "room": "shared"},
 
     # ---- ROOM-SPECIFIC SIGNATURE CLUES ----
     {"id": "sample_vial",         "art_key": "torch",              "role": "neutral",       "name": "Sample Vial",           "room": "research_lab"},
@@ -75,48 +81,99 @@ def select_clues(room: str, min_total: int = 4, max_total: int = 6) -> list:
       - at least 1 neutral     (atmosphere / misdirection)
       - at least 1 incriminating (something to explain away)
       - 4-6 clues total
-    Clues are drawn from the shared pool plus this room's signature clues.
 
-    Returns a list of clue dicts. Raises ValueError if the library can't
-    meet the quota (a safety check — shouldn't happen with the catalogue above).
+    ALSO enforces sprite uniqueness: no two clues in one scenario may share an
+    art_key. Several catalogue entries deliberately reuse sprites (the sprite
+    set is smaller than the catalogue), but two identical sprites sitting in
+    the same room reads as a bug to the player, so they are never co-selected.
+
+    Returns a list of clue dicts. Raises ValueError if the library can't meet
+    the quota for this room.
     """
     # Clues available in this room = shared pool + this room's signatures
     available = [c for c in CLUE_LIBRARY if c["room"] in ("shared", room)]
 
+    chosen = []
+    used_art_keys = set()
+
     def pick(role, n):
-        pool = [c for c in available if c["role"] == role]
-        if len(pool) < n:
-            raise ValueError(f"Not enough '{role}' clues for room '{room}'")
-        return random.sample(pool, n)
+        """
+        Pick n clues of a role whose sprites aren't already used.
+
+        Selected ONE AT A TIME, marking each sprite as used before the next
+        draw. Batch-sampling was the bug here: two clues of the same role can
+        share an art_key (e.g. in a hospital, both signed_authorisation and
+        ward_roster use delivery_docket), so a single random.sample of size 2
+        could return both before either had been marked used.
+        """
+        pool = [
+            c for c in available
+            if c["role"] == role and c["art_key"] not in used_art_keys
+        ]
+        random.shuffle(pool)
+
+        picked = []
+        for candidate in pool:
+            if len(picked) == n:
+                break
+            if candidate["art_key"] in used_art_keys:
+                continue
+            picked.append(candidate)
+            used_art_keys.add(candidate["art_key"])
+
+        if len(picked) < n:
+            raise ValueError(
+                f"Not enough distinct-sprite '{role}' clues for room '{room}' "
+                f"(needed {n}, got {len(picked)})"
+            )
+        return picked
 
     # Guarantee the minimum quota first
-    chosen = []
     chosen += pick("supporting", 2)
     chosen += pick("neutral", 1)
     chosen += pick("incriminating", 1)
 
-    # Fill remaining slots up to a random total between min and max
+    # Fill remaining slots up to a random total between min and max,
+    # still refusing any clue whose sprite is already on the table.
     target_total = random.randint(min_total, max_total)
-    remaining_pool = [c for c in available if c not in chosen]
-    extra_needed = target_total - len(chosen)
-    if extra_needed > 0 and remaining_pool:
-        chosen += random.sample(remaining_pool, min(extra_needed, len(remaining_pool)))
+    chosen_ids = {c["id"] for c in chosen}
+    remaining_pool = [c for c in available if c["id"] not in chosen_ids]
+    random.shuffle(remaining_pool)
+
+    while len(chosen) < target_total and remaining_pool:
+        candidate = remaining_pool.pop()
+        # Re-check against the CURRENT used set — it grows as we add clues,
+        # so filtering the pool once up front is not sufficient.
+        if candidate["art_key"] in used_art_keys:
+            continue
+        chosen.append(candidate)
+        used_art_keys.add(candidate["art_key"])
 
     random.shuffle(chosen)  # so role order isn't predictable in the room
     return chosen
 
 
 # ── Quick self-test ────────────────────────────────────────────
-# Run `python clue_library.py` to see a sample selection and confirm balance.
+# Run `python clue_library.py` to confirm balance AND sprite uniqueness.
 if __name__ == "__main__":
     for room in ["research_lab", "hospital", "office", "government"]:
+        for _ in range(25):  # repeat — these are random draws
+            clues = select_clues(room)
+            roles = [c["role"] for c in clues]
+            art_keys = [c["art_key"] for c in clues]
+
+            assert roles.count("supporting") >= 2, f"{room}: supporting quota failed"
+            assert roles.count("neutral") >= 1, f"{room}: neutral quota failed"
+            assert roles.count("incriminating") >= 1, f"{room}: incriminating quota failed"
+            assert 4 <= len(clues) <= 6, f"{room}: wrong clue count {len(clues)}"
+            assert len(art_keys) == len(set(art_keys)), (
+                f"{room}: duplicate sprite in one scenario -> {art_keys}"
+            )
+
+        # Print one sample per room
         clues = select_clues(room)
-        roles = [c["role"] for c in clues]
         print(f"\n{room} — {len(clues)} clues:")
         for c in clues:
-            print(f"  [{c['role']:>13}] {c['name']:<24} -> {c['art_key']}.png")
-        # confirm the quota held
-        assert roles.count("supporting") >= 2
-        assert roles.count("neutral") >= 1
-        assert roles.count("incriminating") >= 1
-    print("\n✓ All rooms produced balanced, solvable clue sets.")
+            print(f"  [{c['role']:>13}] {c['name']:<26} -> {c['art_key']}.png")
+
+    print("\nAll rooms: quota held, no duplicate sprites, 25 draws each.")

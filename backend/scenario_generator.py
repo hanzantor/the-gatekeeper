@@ -6,23 +6,27 @@
 #                     intended outcome. These are GUARANTEES, done in code.
 #   STAGE 2 (LLM):    write the narrative prose around those fixed choices —
 #                     the gatekeeper's role, suspicion context, player
-#                     backstory, and a description + detail + properties per
-#                     clue.
+#                     backstory, and per-clue text.
 #
 # The model writes flavour; Python owns the structure. art_key is Python-
 # owned too and re-attached after generation (matched on id), so the frontend
 # always has a sprite to map to.
 #
 # TWO KINDS OF PER-CLUE TEXT, deliberately separate (spec §5 display_properties):
-#   - properties : machine-readable flags for the Python evidence check and
-#                  the Gatekeeper's structured cross-reference, e.g.
-#                  {"dated_today": true, "signed_by": "Dr Evans"}.
-#   - detail     : a short, story-rich paragraph the PLAYER reads — the kind
-#                  of texture that makes a clue feel like it belongs to a real
-#                  situation (a phone with call logs to named people, a letter
-#                  with a specific sender and date, a badge for the wrong
-#                  building). This gives the room narrative depth without
-#                  polluting the machine-readable evidence.
+#   - properties    : machine-readable flags for the Python evidence check and
+#                     the Gatekeeper's structured cross-reference, e.g.
+#                     {"dated_today": true, "signed_by": "Dr Evans"}.
+#                     NEVER shown to the player — they leak the clue's role
+#                     and read as awkward inverted negatives.
+#   - detail_points : 3-4 short bullet fragments the PLAYER reads. Concrete
+#                     particulars (names, dates, reference numbers, what a
+#                     log records) that make the object feel like it belongs
+#                     to a real situation.
+#
+# LOCATION IS FORBIDDEN in all generated clue text. Python (the marker system)
+# decides where every object physically sits; if the LLM also describes a
+# location, the two contradict each other on screen. Same principle as the
+# meaning-neutral sprite rule: placement is structural, prose is flavour.
 
 import json
 import random
@@ -58,8 +62,17 @@ def generate_scenario(persona: str, seed: str = "") -> dict:
     # The model returns JSON. Parse it, with a fallback if it misbehaves.
     scenario_body = parse_scenario_json(raw, clues)
 
+    # -- Ensure every selected clue survived generation --
+    # The LLM sometimes returns fewer clues than it was given, which silently
+    # breaks the role quota (and therefore the solvability guarantee). Restore
+    # any it dropped BEFORE art_keys are attached.
+    _backfill_missing_clues(scenario_body, clues)
+
     # -- Re-attach art_key (and role) from the library --
     _attach_art_keys(scenario_body, clues)
+
+    # -- Normalise detail_points so the frontend always gets a list --
+    _normalise_detail_points(scenario_body)
 
     # -- Assemble the final scenario object --
     scenario = {
@@ -73,6 +86,41 @@ def generate_scenario(persona: str, seed: str = "") -> dict:
         "clues": scenario_body.get("clues", []),
     }
     return scenario
+
+
+def _backfill_missing_clues(scenario_body: dict, selected_clues: list) -> None:
+    """
+    Guarantee the scenario contains every clue Python selected.
+
+    Python's select_clues() enforces the role quota that makes a scenario
+    solvable (>=2 supporting, >=1 neutral, >=1 incriminating). If the LLM
+    omits a clue when writing the prose, that guarantee silently breaks and
+    the scenario may become unsolvable — which would corrupt the decision-
+    accuracy metric during evaluation.
+
+    Any dropped clue is re-added here with plain placeholder text. Better a
+    sparsely-described clue than a missing one: the structure is what the
+    experiment depends on.
+    """
+    generated = scenario_body.get("clues", [])
+    present_ids = {c.get("id") for c in generated}
+
+    for source in selected_clues:
+        if source["id"] in present_ids:
+            continue
+        generated.append({
+            "id": source["id"],
+            "name": source["name"],
+            "description": f"A {source['name'].lower()}.",
+            "detail_points": [],
+            "properties": {},
+            "supports": "",
+        })
+
+    # Drop anything the model invented that Python never selected — the room
+    # can only show objects that actually exist in the clue library.
+    valid_ids = {c["id"] for c in selected_clues}
+    scenario_body["clues"] = [c for c in generated if c.get("id") in valid_ids]
 
 
 def _attach_art_keys(scenario_body: dict, selected_clues: list) -> None:
@@ -99,6 +147,28 @@ def _attach_art_keys(scenario_body: dict, selected_clues: list) -> None:
             clue["art_key"] = ""
 
 
+def _normalise_detail_points(scenario_body: dict) -> None:
+    """
+    Guarantee every clue has detail_points as a list of short strings.
+
+    The model occasionally returns a single string instead of an array, or
+    omits the field. The frontend renders this directly as a bullet list, so
+    it must always be a list — never None, never a bare string.
+    """
+    for clue in scenario_body.get("clues", []):
+        points = clue.get("detail_points")
+
+        if isinstance(points, str):
+            # A single string came back — split on sentence/bullet boundaries.
+            parts = [p.strip(" -•\t") for p in points.replace(";", ".").split(".")]
+            points = [p for p in parts if p]
+        elif not isinstance(points, list):
+            points = []
+
+        # Keep them short and tidy; drop anything empty.
+        clue["detail_points"] = [str(p).strip() for p in points if str(p).strip()]
+
+
 def build_scenario_prompt(persona: str, selected_clues: list, room: str, seed: str = ""):
     """Build the system + user prompt for scenario generation."""
     system = (
@@ -116,8 +186,7 @@ def build_scenario_prompt(persona: str, selected_clues: list, room: str, seed: s
     user = f"""Write a scenario for a {persona} Gatekeeper, set in a {room}.
 {seed_line}
 The clue OBJECTS are already chosen (below). Your job is to write the narrative
-and, for each, a fresh description, a rich story-detail, and a set of
-machine-readable properties — contextualised to this scenario.
+and, for each, fresh contextual text for this scenario.
 
 Pre-selected clues (id, role, name): {json.dumps(clue_summary)}
 
@@ -126,29 +195,40 @@ Return a JSON object with exactly these fields:
 - "suspicion_context": string — why the player is under suspicion
 - "player_backstory": string — the player's claimed reason for being here
 - "clues": array — for EACH pre-selected clue above, an object with:
-    "id"          (copy exactly from above),
-    "name"        (you may reword to fit this scenario),
-    "description" (1 sentence — what the object plainly is),
-    "detail"      (2-3 sentences of concrete, specific STORY the player reads:
-                   invent believable particulars — names, dates, times, places,
-                   numbers — that make this object feel like it belongs to a
-                   real situation and hint at how it connects to the player or
-                   the suspicion. E.g. a phone: who was called and when; a
-                   letter: who signed it and what it authorises; a badge: which
-                   building and whose name. Make it evocative but grounded.),
-    "properties"  (an object of true/false or short factual flags ONLY — this
-                   is read by a strict checker, so keep it machine-readable:
-                   e.g. {{"dated_today": true, "signed_by": "Dr Evans",
-                   "name_matches_player": false}}. Do NOT put prose here.),
-    "supports"    (one line: how it helps or hurts the player)
+    "id"             (copy exactly from above),
+    "name"           (you may reword to fit this scenario),
+    "description"    (ONE short sentence naming what the object is — no location),
+    "detail_points"  (an ARRAY of 3-4 SHORT bullet fragments the player reads.
+                      Each is a terse fragment, NOT a full sentence. Be specific
+                      and concrete: names, dates, times, reference numbers, what
+                      a document states, who signed it, what a log records.
+                      Example:
+                      ["Signed by Dr Evans, 14 April",
+                       "Authorises access to Section C-8",
+                       "Valid until 1 May",
+                       "No visitor designation recorded"]),
+    "properties"     (an object of true/false or short factual flags ONLY —
+                      read by a strict checker, so keep it machine-readable:
+                      e.g. {{"dated_today": true, "signed_by": "Dr Evans",
+                      "name_matches_player": false}}. No prose here.),
+    "supports"       (one line: how it helps or hurts the player)
 
 Rules:
-- Honour each clue's role: supporting clues should help a legitimate claim;
-  incriminating clues should genuinely work against the player but be explicable;
-  neutral clues should add atmosphere without proving much.
-- Keep "detail" vivid and specific; keep "properties" terse and factual.
+- NEVER mention where an object is, what it rests on, or anything about its
+  position or surroundings. No "on the desk", "by the door", "hanging on a
+  chair", "in the waiting area", "left on a bench". The game places objects
+  itself and any location you write will contradict what the player sees.
+  Describe only the object itself and what it contains or records.
+- Never state or hint at a clue's role (supporting / neutral / incriminating)
+  in player-facing text — the player must work that out for themselves.
+- Honour each clue's role in substance: supporting clues should help a
+  legitimate claim; incriminating clues should genuinely work against the
+  player but be explicable; neutral clues should add texture without proving
+  much.
+- Keep "detail_points" vivid, specific and SHORT; keep "properties" terse.
+- Invent believable particulars — names, dates, reference numbers — and reuse
+  them across clues where it makes the situation feel connected.
 - The scenario must be solvable by a well-argued honest player.
-- Keep it grounded and believable.
 
 Return JSON only."""
     return system, user
@@ -170,7 +250,7 @@ def parse_scenario_json(raw: str, fallback_clues: list) -> dict:
         return json.loads(cleaned[start:end])
     except (ValueError, json.JSONDecodeError):
         # Fallback: build a minimal valid scenario from the clue library.
-        # detail gets a plain default; art_key is added by _attach_art_keys.
+        # art_key and detail_points are normalised by the callers above.
         return {
             "gatekeeper_role": "Security Officer",
             "suspicion_context": "You were found in a restricted area late at night.",
@@ -179,8 +259,8 @@ def parse_scenario_json(raw: str, fallback_clues: list) -> dict:
                 {
                     "id": c["id"],
                     "name": c["name"],
-                    "description": f"A {c['name'].lower()} found in the room.",
-                    "detail": "",
+                    "description": f"A {c['name'].lower()}.",
+                    "detail_points": [],
                     "properties": {},
                     "supports": c["role"],
                 }
@@ -199,6 +279,8 @@ if __name__ == "__main__":
     print(f"Backstory: {s['player_backstory']}")
     print(f"\nClues ({len(s['clues'])}):")
     for c in s["clues"]:
-        print(f"  - {c.get('name', c.get('id')):<26} art_key={c.get('art_key', '???')}")
-        print(f"      detail: {c.get('detail', '')[:100]}")
+        print(f"\n  {c.get('name', c.get('id'))}  [art_key={c.get('art_key', '???')}]")
+        print(f"    {c.get('description', '')}")
+        for point in c.get("detail_points", []):
+            print(f"      - {point}")
     print("\nScenario generated.")
