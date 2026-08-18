@@ -39,7 +39,7 @@ ACTIVE_MODEL = MODEL_DEV if DEV_MODE else MODEL_EVAL
 # alone, and different call types need different ceilings.
 GATEKEEPER_TEMPERATURE = 0.7   # the agent's per-turn reasoning
 SCENARIO_TEMPERATURE   = 0.8   # scenario generation — slightly more creative
-MAX_TOKENS = 2000              # Gatekeeper per-turn replies (think + answer)
+MAX_TOKENS = 4000              # Gatekeeper per-turn replies (think + answer)
 SCENARIO_MAX_TOKENS = 5000     # scenario generation — R1 needs room to think AND write JSON
 
 # ── Game rules ─────────────────────────────────────────────────

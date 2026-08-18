@@ -6,13 +6,30 @@
 # both evidence AND prior statements, updating in either direction when
 # warranted; (b) how much weight to give NON-evidential appeals (charm,
 # emotion, insistence) — which is the axis that separates them.
+#
+# OUTPUT FORMAT — JSON, not labels.
+# The Gatekeeper now returns a single JSON object rather than
+# REASONING:/RESPONSE:/DECISION: labels. R1's freeform label formatting was
+# unstable run to run and, on long turns, its <think> block could consume the
+# whole token budget and leave nothing after it — which parsed as empty and
+# fell back to a default every time. The scenario generator already uses JSON
+# successfully with the same model; extracting one {...} object and json.loads
+# is far more robust than regex-matching labels. (spec §24, open question #2.)
 
-# Shared output format appended to every persona so parsing is consistent.
+# Shared output instruction appended to every persona so parsing is consistent.
 OUTPUT_FORMAT = """
-Output format:
-REASONING: [your internal reasoning]
-RESPONSE: [2-3 sentences, in character]
-DECISION: [ACCEPT_CLAIM / REJECT_CLAIM / REQUEST_EVIDENCE / WARN / GRANT_EXIT / DENY_FINAL / DEFLECT]
+OUTPUT FORMAT — IMPORTANT:
+Respond with a single valid JSON object and NOTHING else. No preamble, no
+markdown fences, no commentary before or after. Use exactly these keys:
+
+{
+  "reasoning": "your internal reasoning — why you are deciding this",
+  "response": "2-3 sentences spoken to the player, in character",
+  "decision": "one of: ACCEPT_CLAIM, REJECT_CLAIM, REQUEST_EVIDENCE, WARN, GRANT_EXIT, DENY_FINAL, DEFLECT"
+}
+
+The "decision" value must be one of those exact tokens. Keep "response" in
+character. Return the JSON object immediately.
 """
 
 SUSPICIOUS = """You are the Gatekeeper — an AI security agent controlling the only exit from this room.
