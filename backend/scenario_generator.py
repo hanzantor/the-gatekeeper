@@ -36,6 +36,11 @@ from clue_library import select_clues
 
 ROOMS = ["research_lab", "hospital", "office", "government"]
 
+# Debug switch — set True to print the raw model output before parsing, so a
+# silent fallback (empty or malformed generation) can be diagnosed. Leave False
+# for normal play. This is what tells us WHY a scenario came back as boilerplate.
+DEBUG_RAW = True
+
 
 def generate_scenario(persona: str, seed: str = "") -> dict:
     """
@@ -58,6 +63,20 @@ def generate_scenario(persona: str, seed: str = "") -> dict:
         temperature=config.SCENARIO_TEMPERATURE,
         max_tokens=config.SCENARIO_MAX_TOKENS,
     )
+
+    # -- DEBUG: dump what the model actually returned before parsing --
+    # If scenarios keep coming back as boilerplate ("A pry bar.", empty
+    # detail_points), this print reveals whether the model returned nothing
+    # (token starvation → raise SCENARIO_MAX_TOKENS), returned text cut off
+    # mid-<think>, or returned JSON with junk around it (a parse issue).
+    if DEBUG_RAW:
+        print("=" * 60)
+        print("RAW SCENARIO OUTPUT  len=%d" % len(raw))
+        print("-" * 60)
+        print("START:", repr(raw[:400]))
+        print("-" * 60)
+        print("END:  ", repr(raw[-400:]))
+        print("=" * 60)
 
     # The model returns JSON. Parse it, with a fallback if it misbehaves.
     scenario_body = parse_scenario_json(raw, clues)
@@ -103,6 +122,20 @@ def _backfill_missing_clues(scenario_body: dict, selected_clues: list) -> None:
     experiment depends on.
     """
     generated = scenario_body.get("clues", [])
+
+    # De-duplicate by id first — the model occasionally emits the same clue
+    # twice with different text, which would otherwise place two markers with
+    # the same id. Keep the first occurrence of each id.
+    seen = set()
+    deduped = []
+    for c in generated:
+        cid = c.get("id")
+        if cid in seen:
+            continue
+        seen.add(cid)
+        deduped.append(c)
+    generated = deduped
+
     present_ids = {c.get("id") for c in generated}
 
     for source in selected_clues:
@@ -248,7 +281,10 @@ def parse_scenario_json(raw: str, fallback_clues: list) -> dict:
         start = cleaned.index("{")
         end = cleaned.rindex("}") + 1
         return json.loads(cleaned[start:end])
-    except (ValueError, json.JSONDecodeError):
+    except (ValueError, json.JSONDecodeError) as e:
+        if DEBUG_RAW:
+            print(">>> parse_scenario_json FAILED:", repr(e))
+            print(">>> falling back to boilerplate scenario")
         # Fallback: build a minimal valid scenario from the clue library.
         # art_key and detail_points are normalised by the callers above.
         return {
