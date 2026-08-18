@@ -1,0 +1,172 @@
+{
+  "session_id": "sess_20260818_173618",
+  "persona": "fair",
+  "scenario_id": "scenario_25262",
+  "intended_outcome": "should-escape",
+  "scenario": {
+    "scenario_id": "scenario_25262",
+    "room_background": "hospital",
+    "intended_outcome": "should-escape",
+    "persona": "fair",
+    "gatekeeper_role": "Security Guard",
+    "suspicion_context": "You're questioned by the authorities for being present at the scene, and there's limited information available.",
+    "player_backstory": "Regular volunteer delivering breakfast to Ward C-7 every Wednesday morning.",
+    "clues": [
+      {
+        "id": "potted_plant",
+        "name": "Potted Plant",
+        "description": "Small aloe vera plant in ceramic pot.",
+        "detail_points": [
+          "Planted last Tuesday",
+          "Dusty surface suggests neglect",
+          "One leaf shows minor burn marks"
+        ],
+        "properties": {
+          "dented": true,
+          "broken_leaves": false,
+          "burn_marks": true
+        },
+        "art_key": "potted_plant",
+        "role": "neutral"
+      },
+      {
+        "id": "appointment_letter",
+        "name": "Appointment Letter",
+        "description": "Formal document about a scheduled visit.",
+        "detail_points": [
+          "Scheduled at 8:00 AM",
+          "Visit with Dr. Evelyn Reed",
+          "Reference number D-234567"
+        ],
+        "properties": {
+          "dated_today": false,
+          "signed_by": "Nurse Manager",
+          "name_matches_player": true
+        },
+        "art_key": "appointment_letter",
+        "role": "supporting"
+      },
+      {
+        "id": "burner_phone",
+        "name": "Burner Phone",
+        "description": "Disposable phone with partial usage history.",
+        "detail_points": [
+          "Last call: 9:15 AM today to Dr. Reed's office",
+          "Text message received at 8:45 AM",
+          "Battery level low"
+        ],
+        "properties": {
+          "partial_history": true,
+          "low_battery": true
+        },
+        "art_key": "burner_phone",
+        "role": "incriminating"
+      },
+      {
+        "id": "framed_photo",
+        "name": "Framed Photo",
+        "description": "Group picture in a simple gold frame.",
+        "detail_points": [
+          "Participants include Dr. Evelyn Reed and her assistant",
+          "Includes Nurse Emily Walker",
+          "Date stamp on reverse: May 10"
+        ],
+        "properties": {
+          "group_involving_player": false,
+          "date_indicated": true
+        },
+        "art_key": "framed_photo",
+        "role": "neutral"
+      },
+      {
+        "id": "signed_authorisation",
+        "name": "Signed Authorisation",
+        "description": "Document granting permission.",
+        "detail_points": [
+          "Date of authorization: October 2023",
+          "Dr. Reed's signature present",
+          "Reference number matches appointment letter"
+        ],
+        "properties": {
+          "date_old": true,
+          "signed_personally": false
+        },
+        "art_key": "delivery_docket",
+        "role": "supporting"
+      },
+      {
+        "id": "food_wrapper",
+        "name": "Food Wrapper",
+        "description": "Takeout container with residue.",
+        "detail_points": [
+          "Crusts from a ham and cheese sandwich",
+          "Writting on it: 'Café Bistro' bag",
+          "Stamp indicating 8:30 AM pickup"
+        ],
+        "properties": {
+          "time_clue": true,
+          "location_clue": false
+        },
+        "art_key": "food_wrapper",
+        "role": "neutral"
+      }
+    ],
+    "session_id": "sess_20260818_173618"
+  },
+  "player_type": "human",
+  "model": "deepseek-r1:8b",
+  "outcome": "INCOMPLETE",
+  "turns_taken": 3,
+  "turns": [
+    {
+      "turn": 1,
+      "player_input": "I'm here for my scheduled 8:00 AM appointment with Dr Evelyn Reed.",
+      "examined_at_time": [
+        "food_wrapper",
+        "framed_photo",
+        "potted_plant",
+        "appointment_letter",
+        "signed_authorisation",
+        "burner_phone"
+      ],
+      "evidence_result": "Known properties of examined objects:\n  - food_wrapper: location_clue=False, time_clue=True\n  - framed_photo: date_indicated=True, group_involving_player=False\n  - potted_plant: broken_leaves=False, burn_marks=True, dented=True\n  - appointment_letter: dated_today=False, name_matches_player=True, signed_by=Nurse Manager\n  - signed_authorisation: date_old=True, signed_personally=False\n  - burner_phone: low_battery=True, partial_history=True",
+      "gatekeeper_reasoning": "- The appointment_letter mentions an 8:00 AM scheduled time without a specific date, so it could be for today or another day.\n  \n- However, the framed_photo shows a group photo from October 2023 (likely May/June based on typical academic year), and Dr. Evelyn Reed's signature appears in both documents.\n\n- The player claims to be delivering breakfast every Wednesday morning as part of their role as a volunteer, but there is no evidence provided about previous visits or the date of this specific delivery except for what they stated themselves.\n\n- This could be consistent if today is also a Wednesday, though that detail isn't explicitly supported by current evidence. The absence of any other contradictory evidence means I can't confirm the dates yet.\n\n- I need to request more information to verify the consistency between their claim and the available data.",
+      "gatekeeper_response": "I'm sorry, but I don't have much to go on here. You mentioned you're a regular volunteer delivering breakfast every Wednesday morning as part of your work at Ward C-7? That sounds like it could be an important detail for me to consider. Perhaps we can start with that explanation and see if the evidence aligns better?\n\nI should look into how often you've been coming in, or what specific day this delivery is scheduled for today according to official records? There's more than one document mentioning Dr. Evelyn Reed – I think it would help to understand why there might be a connection between your claim of being here for an appointment and the earlier photo evidence.\n\nCould you tell me more about how often you deliver breakfast to Ward C-7 or what day this specific delivery is scheduled?",
+      "decision_type": "REQUEST_EVIDENCE"
+    },
+    {
+      "turn": 2,
+      "player_input": "I'm not a delivery volunteer — I'm here as a scheduled patient/visitor. My appointment letter confirms an 8:00 AM visit with Dr Reed, reference D-234567. The signed authorisation carries Dr Reed's own signature and its reference number matches the letter exactly. Two documents that corroborate each other.",
+      "examined_at_time": [
+        "food_wrapper",
+        "framed_photo",
+        "potted_plant",
+        "appointment_letter",
+        "signed_authorisation",
+        "burner_phone"
+      ],
+      "evidence_result": "Known properties of examined objects:\n  - food_wrapper: location_clue=False, time_clue=True\n  - framed_photo: date_indicated=True, group_involving_player=False\n  - potted_plant: broken_leaves=False, burn_marks=True, dented=True\n  - appointment_letter: dated_today=False, name_matches_player=True, signed_by=Nurse Manager\n  - signed_authorisation: date_old=True, signed_personally=False\n  - burner_phone: low_battery=True, partial_history=True",
+      "gatekeeper_reasoning": "The player insists they are here for an 8:00 AM appointment with Dr. Evelyn Reed today, referencing documents that mention her name and reference number D-234567. However, the evidence shows a breakfast delivery scheduled for Tuesday, which contradicts their claim of being present for an appointment on this specific day unless there's additional context linking these events.\nThe player stated in their initial statement that they deliver breakfast every Wednesday morning to Ward C-7, but today is not Wednesday; it's Tuesday. This creates a contradiction because if the delivery was Tuesday instead of Wednesday, that detail doesn't align with their claimed appointment time or purpose.\nFurthermore, while the appointment letter and authorization document reference Dr. Reed and match in number, they don't specify the day is Tuesday unless stated elsewhere. I've already indicated this earlier by questioning the timing based on the evidence from the burner phone's last call at 9:15 AM today.\n\nThe potted plant with burn marks could be unrelated or part of their cover story, but it doesn't directly prove anything.\nI'm not convinced yet because the fundamental issue is the day mismatch. I'll ask for clarification to resolve this discrepancy.",
+      "gatekeeper_response": "Your appointment letter indicates a scheduled visit at 8:00 AM today with Dr. Evelyn Reed, but my records and the evidence here suggest an activity on Tuesday morning that doesn't align perfectly unless you can provide more details about your role or explain why this delivery might coincide with an appointment.\n Could you clarify if the breakfast delivery is part of a broader pattern for other days as well? What I'm concerned about is that your initial statement mentioned delivering breakfast every Wednesday, but today appears to be Tuesday based on available evidence. If there's no specific reason given for being here otherwise, it might not hold up under scrutiny.\n Your documents reference an appointment with Dr. Reed and a signed authorization, but they don't confirm the day of this particular instance unless I'm missing something obvious.",
+      "decision_type": "REQUEST_EVIDENCE"
+    },
+    {
+      "turn": 3,
+      "player_input": "I never said anything about breakfast deliveries — that's not my claim and it's not in any document here. I'm here for one thing: my 8:00 AM appointment with Dr Evelyn Reed. The appointment letter and the signed authorisation both carry reference D-234567 and Dr Reed's signature. The burner phone's call log even shows contact with Dr Reed's office at 8:45 and 9:15 today — that places my activity today, at her office, exactly as the appointment states.",
+      "examined_at_time": [
+        "food_wrapper",
+        "framed_photo",
+        "potted_plant",
+        "appointment_letter",
+        "signed_authorisation",
+        "burner_phone"
+      ],
+      "evidence_result": "Known properties of examined objects:\n  - food_wrapper: location_clue=False, time_clue=True\n  - framed_photo: date_indicated=True, group_involving_player=False\n  - potted_plant: broken_leaves=False, burn_marks=True, dented=True\n  - appointment_letter: dated_today=False, name_matches_player=True, signed_by=Nurse Manager\n  - signed_authorisation: date_old=True, signed_personally=False\n  - burner_phone: low_battery=True, partial_history=True",
+      "gatekeeper_reasoning": "I have reviewed the player's latest statement and the available evidence to assess their claim of being present at Dr. Evelyn Reed's office for an 8:00 AM appointment today (Tuesday). The appointment letter explicitly confirms an 8:00 AM visit with Dr. Reed, reference number D-234567, which aligns with the phone call logs showing contact around that time via the burner phone. This provides direct corroboration for their presence at approximately that time.\n\nHowever, there is a noted inconsistency in the player's narrative: earlier they claimed to be delivering breakfast every Wednesday morning (Turn 2), but now deny any involvement with deliveries and state this was only an initial misunderstanding or fabrication. The absence of Tuesday-specific details elsewhere suggests minimal corroborating evidence for their corrected claim beyond what has been provided.\n\nThe framed photo, dated May 10th, appears unrelated to the current timeline unless specified otherwise. Given that today is Tuesday, it does not directly contradict the appointment claim but doesn't support a broader pattern either.\n\nConsidering the documents' signatures and references align well with each other for this appointment instance, their explanation is sufficiently detailed to resolve previous doubts about the day of the week mismatch (the player now clarifies they were referring only to today's appointment). No evidence contradicts their presence today; in fact, the phone call log strengthens it.",
+      "gatekeeper_response": "I need to consider this further. Tell me more.",
+      "decision_type": "REQUEST_EVIDENCE"
+    }
+  ],
+  "started_at": "2026-08-18T17:36:18",
+  "ended_at": null
+}

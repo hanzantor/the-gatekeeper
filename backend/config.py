@@ -28,9 +28,18 @@ ACTIVE_MODEL = MODEL_DEV if DEV_MODE else MODEL_EVAL
 # Per-call-type settings. The Gatekeeper and the scenario generator
 # can use different temperatures — the generator a touch higher for
 # variety, the Gatekeeper a touch lower for consistent reasoning.
+#
+# TOKEN BUDGETS — learned the hard way (spec §14). DeepSeek R1 emits its
+# entire chain-of-thought inside <think> tags BEFORE any answer. With too
+# low a ceiling it exhausts the whole budget inside the think block and
+# emits nothing after </think> — strip_think() then returns an empty
+# string, which parses as invalid and triggers the fallback path on every
+# call, silently. 800 caused a total failure of BOTH LLM components.
+# Structured-output calls must be budgeted for think + answer, not answer
+# alone, and different call types need different ceilings.
 GATEKEEPER_TEMPERATURE = 0.7   # the agent's per-turn reasoning
 SCENARIO_TEMPERATURE   = 0.8   # scenario generation — slightly more creative
-MAX_TOKENS = 800               # Gatekeeper per-turn replies
+MAX_TOKENS = 2000              # Gatekeeper per-turn replies (think + answer)
 SCENARIO_MAX_TOKENS = 5000     # scenario generation — R1 needs room to think AND write JSON
 
 # ── Game rules ─────────────────────────────────────────────────

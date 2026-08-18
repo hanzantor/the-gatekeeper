@@ -1,7 +1,12 @@
 // App.jsx — room scene with a swappable background image. Each of the 21 fixed
-// markers shows either a clue SPRITE (if a clue is placed there) or a pulsing
-// placeholder dot (if not). STRUCTURE is fixed for every environment; only the
-// background image changes (office / hospital / government).
+// markers shows a clue SPRITE if (and only if) a clue is placed there. Empty
+// markers render nothing at all and are non-interactive — no dot, no hover, no
+// click target — so the player must genuinely search the room rather than
+// "click the glowing things" (spec §7 / session log §9).
+//
+// App.jsx is the TURN OWNER. It holds the conversation history, the turn
+// counter, and the game state, assembles the full game-state payload each
+// turn, calls sendTurn(), and reads decision_type to drive the end states.
 //
 // KEYING NOTE: clues are keyed throughout by their scenario `id`, never by
 // `art_key`. Several library clues deliberately share a sprite (the sprite set
@@ -12,13 +17,15 @@
 import { useState, useEffect, useMemo } from 'react'
 import { MARKERS } from './data/markers.js'
 import { getClueArt } from './data/clueArtMap.js'
-import { getScenario, GatekeeperClientError } from './api/gatekeeperClient.js'
+import { getScenario, sendTurn, GatekeeperClientError } from './api/gatekeeperClient.js'
 import ClueDetailPanel from './ClueDetailPanel.jsx'
 import Inventory from './Inventory.jsx'
 import PersonaSelect from './PersonaSelect.jsx'
 import GatekeeperCharacter from './GatekeeperCharacter.jsx'
 import GatekeeperDialogue from './GatekeeperDialogue.jsx'
 import './App.css'
+
+const TURN_LIMIT = 15
 
 const BACKGROUND_FILES = {
   office: 'room-office.png',
@@ -40,9 +47,8 @@ function resolveBackground(roomBackground) {
 }
 
 // Fisher-Yates — scatters each session's clues across different markers
-// rather than always landing on the same few positions. Markers that
-// don't get a clue stay empty (pulsing dot) for now — misdirection/filler
-// objects are a later addition per spec_patch_marker_system.md.
+// rather than always landing on the same few positions. Markers that don't
+// get a clue stay empty and are not rendered as interactive at all.
 function shuffle(array) {
   const a = [...array]
   for (let i = a.length - 1; i > 0; i--) {
@@ -53,7 +59,6 @@ function shuffle(array) {
 }
 
 function App() {
-  const [turnsRemaining] = useState(15)
   const [selectedClueId, setSelectedClueId] = useState(null)
   const [examinedClues, setExaminedClues] = useState(() => new Set())
   const [persona, setPersona] = useState(null)
@@ -63,15 +68,29 @@ function App() {
   const [scenarioLoading, setScenarioLoading] = useState(false)
   const [scenarioError, setScenarioError] = useState(null)
 
+  // ── Turn-loop state (App.jsx owns the dialogue) ──────────────
+  const [turnsRemaining, setTurnsRemaining] = useState(TURN_LIMIT)
+  const [history, setHistory] = useState([])       // [{ role, text }]
+  const [gkBusy, setGkBusy] = useState(false)       // waiting on the model
+  const [gkError, setGkError] = useState(null)      // last turn's error, if any
+  // outcome: null (ongoing) | 'ESCAPE' | 'LOCKED'
+  const [outcome, setOutcome] = useState(null)
+
   // Gatekeeper character position, room-relative %.
   const GATEKEEPER_POSITION = { x: 46, y: 42 }
 
   function loadScenario(chosenPersona) {
     setScenarioLoading(true)
     setScenarioError(null)
-    // A new scenario means a new session — clear anything from the last one.
+    // A new scenario means a new session — clear everything from the last one.
     setExaminedClues(new Set())
     setSelectedClueId(null)
+    setHistory([])
+    setTurnsRemaining(TURN_LIMIT)
+    setGkBusy(false)
+    setGkError(null)
+    setOutcome(null)
+    setTalking(false)
     getScenario(chosenPersona)
       .then(setScenario)
       .catch((err) => {
@@ -102,6 +121,9 @@ function App() {
   }, [scenario])
 
   // clue id -> full clue record for the detail panel and inventory.
+  // NOTE: `properties` is carried here too, but is NOT rendered by the panel
+  // (see ClueDetailPanel). It is the machine-readable evidence channel, used
+  // to build object_properties for the Gatekeeper payload below.
   const clueDetails = useMemo(() => {
     if (!scenario) return {}
     const map = {}
@@ -112,15 +134,92 @@ function App() {
         name: clue.name,
         description: clue.description,
         detail_points: clue.detail_points ?? [],
+        properties: clue.properties ?? {},
       }
     })
     return map
   }, [scenario])
 
   function handleExamine(clueId) {
-    if (!clueId) return // empty/misdirection/filler markers — no content yet
+    if (!clueId) return // empty markers carry no clue — nothing to examine
     setSelectedClueId(clueId)
     setExaminedClues((prev) => new Set(prev).add(clueId))
+  }
+
+  // ── The turn loop ────────────────────────────────────────────
+  // Assemble the full game state, call the Gatekeeper, append both sides of
+  // the exchange to history, decrement the counter, and read the decision.
+  function handleSendTurn(playerText) {
+    const text = playerText.trim()
+    if (!text || gkBusy || outcome) return
+
+    const examinedIds = [...examinedClues]
+
+    // Build object_properties from every clue the player has examined — the
+    // machine-readable evidence the Python check reasons over. Kept out of
+    // the detail panel; surfaced only to the Gatekeeper.
+    const objectProperties = {}
+    examinedIds.forEach((cid) => {
+      const clue = clueDetails[cid]
+      if (clue) objectProperties[cid] = clue.properties ?? {}
+    })
+
+    // This player message becomes turn (TURN_LIMIT - turnsRemaining + 1).
+    const turnNumber = TURN_LIMIT - turnsRemaining + 1
+    const isFinalTurn = turnsRemaining <= 1
+
+    // Optimistically show the player's line straight away.
+    const historyWithPlayer = [...history, { role: 'player', text }]
+    setHistory(historyWithPlayer)
+    setGkBusy(true)
+    setGkError(null)
+
+    const gameState = {
+      persona,
+      scenario,
+      session_id: scenario?.session_id ?? '',
+      turn: turnNumber,
+      turns_remaining: turnsRemaining,
+      final_turn: isFinalTurn,
+      player_inventory: examinedIds,
+      examined_objects: examinedIds,
+      object_properties: objectProperties,
+      // Send history WITHOUT this turn's player line appended again — the
+      // backend adds "PLAYER JUST SAID" separately, so passing it in both
+      // places would duplicate it in the prompt.
+      conversation_history: history,
+      player_input: text,
+    }
+
+    sendTurn(gameState)
+      .then((res) => {
+        setHistory((prev) => [
+          ...prev,
+          { role: 'gatekeeper', text: res.response },
+        ])
+        setTurnsRemaining((prev) => Math.max(0, prev - 1))
+
+        if (res.decision_type === 'GRANT_EXIT') {
+          setOutcome('ESCAPE')
+        } else if (res.decision_type === 'DENY_FINAL') {
+          setOutcome('LOCKED')
+        } else if (isFinalTurn) {
+          // Safety net: the backend forces DENY_FINAL on the final turn, but
+          // if anything slipped through, the turn limit still ends the game.
+          setOutcome('LOCKED')
+        }
+      })
+      .catch((err) => {
+        // Roll the player's line back out of history so they can retry
+        // cleanly rather than the message sitting there unanswered.
+        setHistory((prev) => prev.slice(0, -1))
+        setGkError(
+          err instanceof GatekeeperClientError
+            ? err.message
+            : 'The Gatekeeper did not respond. Try again.'
+        )
+      })
+      .finally(() => setGkBusy(false))
   }
 
   const selectedClue = selectedClueId ? clueDetails[selectedClueId] : null
@@ -166,7 +265,13 @@ function App() {
     <div className="app">
       <header className="titlebar">
         <span className="titlebar-name">THE GATEKEEPER</span>
-        <span className="titlebar-status">SECURE ROOM · LOCKED</span>
+        <span className="titlebar-status">
+          {outcome === 'ESCAPE'
+            ? 'DOOR · OPEN'
+            : outcome === 'LOCKED'
+            ? 'SECURE ROOM · LOCKED'
+            : 'SECURE ROOM · LOCKED'}
+        </span>
       </header>
 
       <main className="stage">
@@ -183,9 +288,12 @@ function App() {
           >
             {MARKERS.map((m) => {
               const clueId = placedClues[m.id]
-              const clue = clueId ? clueDetails[clueId] : null
+              // Empty marker: render nothing and no interactive element at all.
+              if (!clueId) return null
+
+              const clue = clueDetails[clueId]
               const art = clue ? getClueArt(clue.art_key, m.surface) : null
-              const examined = clueId && examinedClues.has(clueId)
+              const examined = examinedClues.has(clueId)
 
               return (
                 <button
@@ -195,9 +303,7 @@ function App() {
                   data-zone={m.zone}
                   data-surface={m.surface}
                   onClick={() => handleExamine(clueId)}
-                  aria-label={
-                    clue ? `Examine ${clue.name}` : `Examine marker ${m.id} (${m.zone})`
-                  }
+                  aria-label={clue ? `Examine ${clue.name}` : 'Examine object'}
                 >
                   {art?.found ? (
                     <img
@@ -207,7 +313,9 @@ function App() {
                       style={art.style}
                     />
                   ) : (
-                    <span className="clue-dot" />
+                    // Fallback only when a placed clue's sprite fails to
+                    // resolve — never for empty markers.
+                    <span className="clue-sprite-missing" />
                   )}
                 </button>
               )
@@ -223,14 +331,34 @@ function App() {
       </main>
 
       <footer className="statusbar">
-        <span>Turns remaining: <strong>{turnsRemaining}</strong></span>
+        <span>
+          Turns remaining: <strong>{turnsRemaining}</strong>
+        </span>
         <span className="statusbar-hint">
-          {talking ? 'Type your response below.' : 'Click the Gatekeeper to speak.'}
+          {outcome === 'ESCAPE'
+            ? 'The door is open. You are free.'
+            : outcome === 'LOCKED'
+            ? 'You are locked in.'
+            : talking
+            ? 'Make your case.'
+            : 'Click the Gatekeeper to speak.'}
         </span>
       </footer>
 
       <ClueDetailPanel clue={selectedClue} onClose={() => setSelectedClueId(null)} />
-      {talking && <GatekeeperDialogue onClose={() => setTalking(false)} />}
+
+      {talking && (
+        <GatekeeperDialogue
+          persona={persona}
+          history={history}
+          busy={gkBusy}
+          error={gkError}
+          outcome={outcome}
+          turnsRemaining={turnsRemaining}
+          onSend={handleSendTurn}
+          onClose={() => setTalking(false)}
+        />
+      )}
     </div>
   )
 }

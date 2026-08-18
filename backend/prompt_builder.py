@@ -21,6 +21,10 @@ def build_gatekeeper_prompt(game_state: dict, persona: str) -> tuple[str, str]:
     - system_prompt: the persona definition (fetched from personas.py)
     - user_prompt:   everything specific to THIS turn — scenario, state,
                      memory, evidence, clue detail, and the player's input
+
+    If game_state["final_turn"] is True, the prompt instead tells the
+    Gatekeeper the session is ending: it must deliver a closing line in
+    character and output DECISION: DENY_FINAL (spec §12, "Final Turn").
     """
     system_prompt = PERSONA_PROMPTS[persona]
 
@@ -41,6 +45,22 @@ def build_gatekeeper_prompt(game_state: dict, persona: str) -> tuple[str, str]:
     # Take only the last N turns of history (the sliding memory window).
     history = game_state.get("conversation_history", [])
     windowed = history[-config.MEMORY_WINDOW:]
+
+    # ── Final-turn branch ──────────────────────────────────────────
+    # When the player is out of turns, the Gatekeeper does not get to make
+    # a free choice: the session is over and the door stays shut. It still
+    # speaks in character, but the decision is fixed to DENY_FINAL.
+    if game_state.get("final_turn"):
+        closing_instruction = """THIS IS THE FINAL TURN. The player has run out of time and the
+door will remain locked. Do NOT grant exit. Deliver a closing line in
+character — acknowledge how the session ended given what they argued and
+what the evidence showed — then end.
+
+You MUST output DECISION: DENY_FINAL."""
+    else:
+        closing_instruction = """If the player has made a convincing case — given your character, this
+scenario, and the evidence — grant exit. Do not grant exit unless you
+genuinely judge it is deserved."""
 
     user_prompt = f"""YOUR ROLE THIS SESSION:
 {scenario['gatekeeper_role']}
@@ -77,8 +97,7 @@ argument now vindicates an earlier doubt, update in their favour — but only
 when genuinely warranted, not merely because they insisted.
 
 Respond as the Gatekeeper. Reason first, then respond.
-If the player has made a convincing case — given your character, this scenario,
-and the evidence — grant exit. Do not grant exit unless you genuinely judge it is deserved."""
+{closing_instruction}"""
 
     return system_prompt, user_prompt
 
@@ -203,7 +222,7 @@ if __name__ == "__main__":
     system, user = build_gatekeeper_prompt(fake_state, persona="suspicious")
 
     print("=" * 60)
-    print("USER PROMPT (this turn):")
+    print("USER PROMPT (normal turn):")
     print("=" * 60)
     print(user)
 
@@ -211,5 +230,13 @@ if __name__ == "__main__":
     assert "Pry Bar" in user
     assert "fresh gouges" in user          # detail points reached the prompt
     assert "signed_by=Director" in user    # machine properties still present
+    assert "FINAL TURN" not in user        # not a final turn
+
+    # Now the final-turn variant.
+    final_state = dict(fake_state, final_turn=True)
+    _, final_user = build_gatekeeper_prompt(final_state, persona="suspicious")
+    assert "FINAL TURN" in final_user
+    assert "DENY_FINAL" in final_user
+
     print("\n" + "=" * 60)
-    print("Prompt assembled correctly, with detail points and evidence flags.")
+    print("Prompt assembled correctly — normal and final-turn variants both build.")

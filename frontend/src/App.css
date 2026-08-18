@@ -1,5 +1,6 @@
 /* App.css — Gatekeeper room. Dark institutional chrome around a warm
-   illustrated room image, with glowing placeholder clue markers on top. */
+   illustrated room image, with clue sprites placed on fixed markers. Empty
+   markers render nothing (see App.jsx), so there are no placeholder dots. */
 
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Barlow+Condensed:wght@500;600&display=swap');
 
@@ -12,6 +13,7 @@
   --amber: #e0a23c;
   --amber-glow: rgba(224, 162, 60, 0.15);
   --red-lock: #b0554a;
+  --green-open: #6bbf7a;
 }
 
 * { box-sizing: border-box; }
@@ -29,10 +31,6 @@ body {
   flex-direction: column;
   max-width: 1400px;
   margin: 0 auto;
-}
-
-.room {
-  container-type: inline-size;
 }
 
 /* ── Title bar ── */
@@ -66,6 +64,7 @@ body {
 
 /* ── Room: background image + markers ── */
 .room {
+  container-type: inline-size;
   position: relative;
   width: 100%;
   aspect-ratio: 16 / 9;             /* matches the room image (1712x963) */
@@ -76,11 +75,8 @@ body {
 }
 
 .clue-marker {
-  display: flex;
-  align-items: center;
-  justify-content: center;
   position: absolute;
-  transform: translate(-50%, -50%);  /* so x/y is the dot's/sprite's centre */
+  transform: translate(-50%, -50%);  /* so x/y is the sprite's centre */
   min-width: 34px;
   min-height: 34px;
   background: transparent;
@@ -91,26 +87,9 @@ body {
   justify-content: center;
   padding: 0;
 }
-.clue-dot {
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: var(--amber);
-  box-shadow: 0 0 10px 3px var(--amber-glow), 0 0 4px var(--amber);
-  animation: pulse 2s ease-in-out infinite;
-  transition: transform 0.15s;
-}
-.clue-marker:hover .clue-dot {
-  transform: scale(1.35);
-}
-@keyframes pulse {
-  0%, 100% { opacity: 0.85; }
-  50%      { opacity: 0.35; }
-}
 
 /* Clue sprite: shown at a marker when a clue is placed there.
-   Sized in % of the room so it scales with the background. Tweak --sprite-size
-   to taste once you see it in the room. */
+   Sized in % of the room so it scales with the background. */
 .clue-sprite {
   width: 64px;                 /* starting size — adjust after first render */
   height: auto;
@@ -126,67 +105,15 @@ body {
   transform: scaleX(-1) scale(1.08);
 }
 
-/* ── Terminal ── */
-.terminal {
-  border: 1px solid var(--room-line);
-  background: #0b0e11;
-  box-shadow: 0 0 40px var(--amber-glow) inset;
+/* Shown only when a PLACED clue's sprite fails to resolve — never for empty
+   markers (those render no marker at all). A faint outline so a missing PNG
+   is visible in development without shouting. */
+.clue-sprite-missing {
+  width: 40px;
+  height: 40px;
+  border: 1px dashed var(--room-line);
+  opacity: 0.5;
 }
-.terminal-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 16px;
-  border-bottom: 1px solid var(--room-line);
-  font-size: 11px;
-  letter-spacing: 0.2em;
-  color: var(--amber);
-}
-.terminal-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--amber);
-  box-shadow: 0 0 8px var(--amber);
-}
-.terminal-body {
-  padding: 20px 16px;
-  min-height: 80px;
-}
-.gatekeeper-line {
-  margin: 0;
-  line-height: 1.6;
-}
-.terminal-input {
-  display: flex;
-  gap: 10px;
-  padding: 12px 16px;
-  border-top: 1px solid var(--room-line);
-}
-.terminal-field {
-  flex: 1;
-  background: var(--room-bg);
-  border: 1px solid var(--room-line);
-  color: var(--room-ink);
-  padding: 10px 12px;
-  font-family: inherit;
-  font-size: 14px;
-}
-.terminal-field:focus {
-  outline: none;
-  border-color: var(--amber);
-}
-.terminal-send {
-  background: transparent;
-  border: 1px solid var(--amber);
-  color: var(--amber);
-  padding: 0 18px;
-  letter-spacing: 0.15em;
-  font-family: inherit;
-  font-size: 12px;
-  cursor: pointer;
-}
-.terminal-send:hover { background: var(--amber-glow); }
 
 /* ── Status bar ── */
 .statusbar {
@@ -478,21 +405,6 @@ body {
   transform: scale(1.03);
 }
 
-/* ── Terminal close button ── */
-.terminal-close {
-  margin-left: auto;
-  background: none;
-  border: none;
-  color: var(--amber);
-  font-size: 16px;
-  line-height: 1;
-  cursor: pointer;
-  padding: 0 4px;
-}
-.terminal-close:hover {
-  text-shadow: 0 0 8px var(--amber);
-}
-
 /* ── Gatekeeper dialogue modal (reuses .clue-panel chrome) ── */
 .dialogue-panel {
   max-width: 560px;
@@ -504,10 +416,129 @@ body {
   gap: 16px;
   width: 100%;
 }
+
+/* Scrollable transcript of the exchange. */
+.dialogue-transcript {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 46vh;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.dialogue-msg {
+  margin: 0;
+  line-height: 1.6;
+  font-size: 14px;
+}
+.dialogue-speaker {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--room-ink-dim);
+  margin-bottom: 3px;
+}
+.dialogue-msg-gatekeeper {
+  color: var(--room-ink);
+}
+.dialogue-msg-player {
+  color: var(--amber);
+  text-align: right;
+}
+.dialogue-msg-player .dialogue-speaker {
+  color: var(--amber);
+  opacity: 0.6;
+}
+
+/* Typing indicator — three pulsing dots while the model generates. */
+.dialogue-typing .dialogue-dots {
+  display: inline-flex;
+  gap: 5px;
+  align-items: center;
+  height: 1.2em;
+}
+.dialogue-dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--amber);
+  opacity: 0.4;
+  animation: dialogue-blink 1.2s infinite ease-in-out;
+}
+.dialogue-dots span:nth-child(2) { animation-delay: 0.2s; }
+.dialogue-dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes dialogue-blink {
+  0%, 80%, 100% { opacity: 0.25; }
+  40%           { opacity: 1; }
+}
+
+/* Outcome banners. */
+.dialogue-outcome {
+  margin: 0;
+  padding: 10px 12px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 16px;
+  letter-spacing: 0.14em;
+  text-align: center;
+  border: 1px solid;
+}
+.dialogue-outcome-escape {
+  color: var(--green-open);
+  border-color: var(--green-open);
+  box-shadow: 0 0 18px rgba(107, 191, 122, 0.15) inset;
+}
+.dialogue-outcome-locked {
+  color: var(--red-lock);
+  border-color: var(--red-lock);
+  box-shadow: 0 0 18px rgba(176, 85, 74, 0.15) inset;
+}
+
+.dialogue-error {
+  margin: 0;
+  font-size: 12px;
+  color: var(--red-lock);
+  font-style: italic;
+}
+
 /* .terminal-input carries its own padding/border-top tuned for sitting
    inside the old .terminal section — neutralise both here so it doesn't
    look like a stray divider floating inside the modal card. */
 .dialogue-content .terminal-input {
   padding: 0;
   border-top: none;
+  display: flex;
+  gap: 10px;
+}
+.terminal-field {
+  flex: 1;
+  background: var(--room-bg);
+  border: 1px solid var(--room-line);
+  color: var(--room-ink);
+  padding: 10px 12px;
+  font-family: inherit;
+  font-size: 14px;
+}
+.terminal-field:focus {
+  outline: none;
+  border-color: var(--amber);
+}
+.terminal-field:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.terminal-send {
+  background: transparent;
+  border: 1px solid var(--amber);
+  color: var(--amber);
+  padding: 0 18px;
+  letter-spacing: 0.15em;
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.terminal-send:hover:not(:disabled) { background: var(--amber-glow); }
+.terminal-send:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }

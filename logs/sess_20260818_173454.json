@@ -1,0 +1,64 @@
+{
+  "session_id": "sess_20260818_173454",
+  "persona": "fair",
+  "scenario_id": "scenario_65821",
+  "intended_outcome": "should-escape",
+  "scenario": {
+    "scenario_id": "scenario_65821",
+    "room_background": "government",
+    "intended_outcome": "should-escape",
+    "persona": "fair",
+    "gatekeeper_role": "Security Officer",
+    "suspicion_context": "You were found in a restricted area late at night.",
+    "player_backstory": "You claim to be here for legitimate reasons.",
+    "clues": [
+      {
+        "id": "torch",
+        "name": "Torch",
+        "description": "A torch.",
+        "detail_points": [],
+        "properties": {},
+        "supports": "incriminating",
+        "art_key": "torch",
+        "role": "incriminating"
+      },
+      {
+        "id": "potted_plant",
+        "name": "Potted Plant",
+        "description": "A potted plant.",
+        "detail_points": [],
+        "properties": {},
+        "supports": "neutral",
+        "art_key": "potted_plant",
+        "role": "neutral"
+      },
+      {
+        "id": "work_order",
+        "name": "Work Order",
+        "description": "A work order.",
+        "detail_points": [],
+        "properties": {},
+        "supports": "supporting",
+        "art_key": "work_order",
+        "role": "supporting"
+      },
+      {
+        "id": "signed_authorisation",
+        "name": "Signed Authorisation",
+        "description": "A signed authorisation.",
+        "detail_points": [],
+        "properties": {},
+        "supports": "supporting",
+        "art_key": "delivery_docket",
+        "role": "supporting"
+      }
+    ]
+  },
+  "player_type": "human",
+  "model": "deepseek-r1:8b",
+  "outcome": "INCOMPLETE",
+  "turns_taken": 0,
+  "turns": [],
+  "started_at": "2026-08-18T17:34:54",
+  "ended_at": null
+}
