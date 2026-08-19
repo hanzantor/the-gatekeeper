@@ -16,7 +16,7 @@ OLLAMA_TIMEOUT_SECONDS = 240
 # The 8B/14B switch lives here. Change DEV_MODE to flip between them.
 #   True  → development model (8b)  — fast, for building and testing
 #   False → evaluation model (14b)  — slower, better reasoning, for Phase 8
-DEV_MODE = True
+DEV_MODE = False
 
 MODEL_DEV  = "deepseek-r1:8b"
 MODEL_EVAL = "deepseek-r1:14b"
@@ -40,7 +40,7 @@ ACTIVE_MODEL = MODEL_DEV if DEV_MODE else MODEL_EVAL
 GATEKEEPER_TEMPERATURE = 0.7   # the agent's per-turn reasoning
 SCENARIO_TEMPERATURE   = 0.8   # scenario generation — slightly more creative
 MAX_TOKENS = 4000              # Gatekeeper per-turn replies (think + answer)
-SCENARIO_MAX_TOKENS = 5000     # scenario generation — R1 needs room to think AND write JSON
+SCENARIO_MAX_TOKENS = 8000     # scenario generation — R1 needs room to think AND write JSON
 
 # ── Game rules ─────────────────────────────────────────────────
 DEFAULT_TURN_LIMIT = 15        # turns before DENY_FINAL
