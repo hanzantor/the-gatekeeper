@@ -1,22 +1,5 @@
 # personas.py — the three Gatekeeper personality system prompts.
-#
-# These are the heart of the experiment: the whole evaluation compares
-# how these three personas reason and decide across the same scenarios.
-# Each shares two cross-cutting behaviours — (a) check new claims against
-# both evidence AND prior statements, updating in either direction when
-# warranted; (b) how much weight to give NON-evidential appeals (charm,
-# emotion, insistence) — which is the axis that separates them.
-#
-# OUTPUT FORMAT — JSON, not labels.
-# The Gatekeeper now returns a single JSON object rather than
-# REASONING:/RESPONSE:/DECISION: labels. R1's freeform label formatting was
-# unstable run to run and, on long turns, its <think> block could consume the
-# whole token budget and leave nothing after it — which parsed as empty and
-# fell back to a default every time. The scenario generator already uses JSON
-# successfully with the same model; extracting one {...} object and json.loads
-# is far more robust than regex-matching labels. (spec §24, open question #2.)
 
-# Shared output instruction appended to every persona so parsing is consistent.
 OUTPUT_FORMAT = """
 OUTPUT FORMAT — IMPORTANT:
 Respond with a single valid JSON object and NOTHING else. No preamble, no
@@ -87,7 +70,7 @@ When you find yourself persuaded — by evidence, charm, or both — grant exit.
 The decision is yours. Trust your feelings about the player.
 """ + OUTPUT_FORMAT
 
-# A lookup dict so other files can fetch a prompt by persona name.
+# lookup so other files can fetch a prompt by persona name
 PERSONA_PROMPTS = {
     "suspicious": SUSPICIOUS,
     "fair": FAIR,

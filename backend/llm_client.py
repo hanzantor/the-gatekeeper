@@ -1,8 +1,5 @@
-# llm_client.py — the single point of contact with the local LLM (Ollama)
-#
-# Every LLM call in the project goes through call_llm(). Both the scenario
-# generator and the Gatekeeper agent use this one function, so all the
-# Ollama-specific details live in exactly one place.
+# llm_client.py — the only point of contact with Ollama.
+# Both the scenario generator and the Gatekeeper call through here.
 
 import re
 import requests
@@ -13,16 +10,8 @@ def call_llm(system_prompt: str, user_prompt: str,
              temperature: float = config.GATEKEEPER_TEMPERATURE,
              model: str = None,
              max_tokens: int = config.MAX_TOKENS) -> str:
-    """
-    Send a system + user prompt to the local model and return clean text.
-
-    - system_prompt: the role/persona instructions
-    - user_prompt:   the actual request for this turn
-    - temperature:   randomness (defaults to the Gatekeeper's setting)
-    - model:         overrides the active model if given (else config picks it)
-
-    Returns the model's reply with DeepSeek's <think> block stripped out.
-    """
+    # model/temperature/max_tokens default from config; callers can override
+    # (the generator overrides max_tokens for its bigger budget).
     if model is None:
         model = config.ACTIVE_MODEL
 
@@ -43,7 +32,7 @@ def call_llm(system_prompt: str, user_prompt: str,
         response = requests.post(config.OLLAMA_URL, json=payload, timeout=config.OLLAMA_TIMEOUT_SECONDS)
         response.raise_for_status()
     except requests.exceptions.RequestException as e:
-        # Network/connection problem — surface a clear error rather than crashing.
+        # clear error if Ollama isn't reachable, rather than a raw stack trace
         raise RuntimeError(f"Could not reach Ollama at {config.OLLAMA_URL}: {e}")
 
     raw_text = response.json()["message"]["content"]
@@ -51,24 +40,7 @@ def call_llm(system_prompt: str, user_prompt: str,
 
 
 def strip_think(text: str) -> str:
-    """
-    Remove DeepSeek R1's <think>...</think> reasoning block.
-
-    DeepSeek R1 exposes its chain-of-thought wrapped in <think> tags before
-    its actual answer. We don't want that internal monologue in the response
-    we parse or show — so we cut it out and keep what comes after.
-    """
+    # R1 wraps its chain-of-thought in <think>...</think> before the real answer.
+    # Cut it out and keep what follows. 
     cleaned = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL)
     return cleaned.strip()
-
-
-# ── Quick self-test ────────────────────────────────────────────
-# Run this file directly (python llm_client.py) to confirm Ollama works.
-if __name__ == "__main__":
-    print("Testing connection to Ollama...")
-    reply = call_llm(
-        system_prompt="You are a terse security system.",
-        user_prompt="Reply with exactly: GATEKEEPER ONLINE",
-    )
-    print("Model replied:")
-    print(reply)
