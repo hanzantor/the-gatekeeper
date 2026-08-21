@@ -331,8 +331,17 @@ function App() {
             <GatekeeperCharacter
               x={GATEKEEPER_POSITION.x}
               y={GATEKEEPER_POSITION.y}
+              state={
+                gkBusy
+                  ? 'talking'
+                  : outcome === 'ESCAPE'
+                  ? 'grant'
+                  : outcome === 'LOCKED'
+                  ? 'deny'
+                  : 'idle'
+              }
               onClick={() => setTalking(true)}
-            />
+              />
           </div>
         </div>
       </main>
