@@ -7,7 +7,7 @@ export const MARKERS = [
   { id: 5, zone: 'desk', x: 69.7, y: 55.11, surface: 'desk' },
   { id: 6, zone: 'desk', x: 61.5, y: 47.67, surface: 'desk' },
   { id: 7, zone: 'desk', x: 64.88, y: 58.12, surface: 'desk' },
-  { id: 8, zone: 'floor', x: 9.36, y: 78.39, surface: 'floor' },
+  //{ id: 8, zone: 'floor', x: 9.36, y: 78.39, surface: 'floor' },
   { id: 9, zone: 'floor', x: 93.76, y: 80.13, surface: 'floor' },
   { id: 10, zone: 'floor', x: 46.08, y: 79.02, surface: 'floor' },
   { id: 11, zone: 'floor', x: 41.27, y: 41.65, surface: 'floor' },

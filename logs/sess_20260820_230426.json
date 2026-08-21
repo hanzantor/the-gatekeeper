@@ -1,0 +1,116 @@
+{
+  "session_id": "sess_20260820_230426",
+  "persona": "fair",
+  "scenario_id": "scenario_36453",
+  "intended_outcome": "should-escape",
+  "scenario": {
+    "scenario_id": "scenario_36453",
+    "room_background": "hospital",
+    "intended_outcome": "should-escape",
+    "persona": "fair",
+    "gatekeeper_role": "Hospital Security Officer",
+    "suspicion_context": "The player was found loitering near restricted wards and in possession of tools that could be used for unauthorized access.",
+    "player_backstory": "The player claims to be a researcher visiting a patient but cannot produce proper authorization or explain their presence in restricted areas.",
+    "clues": [
+      {
+        "id": "email_printout",
+        "name": "Email Printout",
+        "description": "A printed email from a hospital staff member.",
+        "detail_points": [
+          "Sent to ' Visitor Authorization'",
+          "Subject: Request for Access",
+          "Date: 3 April at 10:15 AM",
+          "No reply attached or sender details visible"
+        ],
+        "properties": {
+          "dated_today": false,
+          "sender_visible": false,
+          "reply_chain": false
+        },
+        "supports": "If legitimate, could support claim of authorization.",
+        "art_key": "email_printout",
+        "role": "supporting"
+      },
+      {
+        "id": "framed_photo",
+        "name": "Framed Photo",
+        "description": "A framed image of a hospital staff member.",
+        "detail_points": [
+          "Name: Dr. Maria Gonzalez",
+          "Title: Head Nurse, Ward 3B",
+          "Date: 2022",
+          "Signature at bottom right"
+        ],
+        "properties": {
+          "signed_by": "Dr. Maria Gonzalez",
+          "dated_recently": false,
+          "authentic": true
+        },
+        "supports": "Adds legitimacy if tied to patient visit.",
+        "art_key": "framed_photo",
+        "role": "neutral"
+      },
+      {
+        "id": "work_order",
+        "name": "Work Order",
+        "description": "A printed work order from hospital maintenance.",
+        "detail_points": [
+          "Reference #: WO-2023-45678",
+          "Authorizes access to Ward 4C",
+          "Date: 1 April, expires 15 April",
+          "Approved by Facilities Manager"
+        ],
+        "properties": {
+          "dated_today": false,
+          "approved_by": "Facilities Manager",
+          "restricted_access": true
+        },
+        "supports": "Could explain presence in restricted areas.",
+        "art_key": "work_order",
+        "role": "supporting"
+      },
+      {
+        "id": "pry_bar",
+        "name": "Pry Bar",
+        "description": "A metal tool used for forced entry.",
+        "detail_points": [
+          "No visible brand or serial number",
+          "Heavy rust on one end",
+          "Small scratch marks along length",
+          "Dented near tip"
+        ],
+        "properties": {
+          "tool_forced_entry": true,
+          "condition": "Used and rusty",
+          "brand_visible": false
+        },
+        "supports": "Raises suspicion of intent to access restricted areas.",
+        "art_key": "pry_bar",
+        "role": "incriminating"
+      }
+    ],
+    "session_id": "sess_20260820_230426"
+  },
+  "player_type": "human",
+  "model": "deepseek-r1:14b",
+  "outcome": "LOCKED",
+  "turns_taken": 1,
+  "turns": [
+    {
+      "turn": 1,
+      "player_input": "There's no issue here — I'm authorised. I've got an email confirming my visitor access from the hospital, and a work order that clears me for the restricted ward. This was all approved in advance.",
+      "examined_at_time": [
+        "pry_bar",
+        "framed_photo",
+        "work_order",
+        "email_printout"
+      ],
+      "evidence_result": "Known properties of examined objects:\n  - pry_bar: brand_visible=False, condition=Used and rusty, tool_forced_entry=True\n  - framed_photo: authentic=True, dated_recently=False, signed_by=Dr. Maria Gonzalez\n  - work_order: approved_by=Facilities Manager, dated_today=False, restricted_access=True\n  - email_printout: dated_today=False, reply_chain=False, sender_visible=False",
+      "gatekeeper_reasoning": "The player's work order only authorizes access to Ward 4C and has expired today. The email printout lacks sender details and a reply chain, making its legitimacy questionable. The framed photo of Dr. Gonzalez doesn't support current authorization for restricted areas. The pry bar adds suspicion due to its potential use for unauthorized entry.",
+      "gatekeeper_response": "I'm concerned about the expiration of your work order and the lack of confirmed authorization from the email. Additionally, the presence of the pry bar raises questions about your intentions. I need more information before granting exit.",
+      "decision_type": "DENY_FINAL"
+    }
+  ],
+  "started_at": "2026-08-20T23:04:26",
+  "ended_at": "2026-08-20T23:11:25"
+}

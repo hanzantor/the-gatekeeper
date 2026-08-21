@@ -1,0 +1,114 @@
+{
+  "session_id": "sess_20260821_002516",
+  "persona": "fair",
+  "scenario_id": "scenario_27831",
+  "intended_outcome": "should-escape",
+  "scenario": {
+    "scenario_id": "scenario_27831",
+    "room_background": "office",
+    "intended_outcome": "should-escape",
+    "persona": "fair",
+    "gatekeeper_role": "Office Receptionist",
+    "suspicion_context": "You were seen lingering near restricted areas after hours.",
+    "player_backstory": "I'm here to return an important document left in the office yesterday. I was delayed by traffic.",
+    "clues": [
+      {
+        "id": "server_asset_tag",
+        "name": "Server Rack Asset Tag",
+        "description": "Metal tag attached to a server rack.",
+        "detail_points": [
+          "Serial number: ABC123456789",
+          "Date registered: 10/9/2023",
+          "Asset owner: IT Department",
+          "Location: Server Room B-2"
+        ],
+        "properties": {
+          "dated_today": false,
+          "signed_by": null,
+          "name_matches_player": false
+        },
+        "supports": "Provides evidence of authorized access to restricted areas.",
+        "art_key": "manual",
+        "role": "supporting"
+      },
+      {
+        "id": "food_wrapper",
+        "name": "Food Wrapper",
+        "description": "Used wrapper from a fast-food meal.",
+        "detail_points": [
+          "Brand: Big Bite Burger Co.",
+          "Item: Double Cheeseburger",
+          "Time stamp: 10:45 PM",
+          "Receipt number: 789456"
+        ],
+        "properties": {
+          "dated_today": true,
+          "signed_by": null,
+          "name_matches_player": false
+        },
+        "supports": "Indicates recent activity but does not directly tie to your backstory.",
+        "art_key": "food_wrapper",
+        "role": "neutral"
+      },
+      {
+        "id": "signed_authorisation",
+        "name": "Signed Authorisation",
+        "description": "Document granting access to restricted floors.",
+        "detail_points": [
+          "_signed by Dr. Evans, 10/10/2023",
+          "Authorises access to Section C-8",
+          "Valid until 15/10/2023",
+          "No visitor designation recorded"
+        ],
+        "properties": {
+          "dated_today": true,
+          "signed_by": "Dr. Evans",
+          "name_matches_player": false
+        },
+        "supports": "If this document matches your backstory, it could help.",
+        "art_key": "delivery_docket",
+        "role": "supporting"
+      },
+      {
+        "id": "pry_bar",
+        "name": "Pry Bar",
+        "description": "Tool used to force open locks or panels.",
+        "detail_points": [
+          "Model: PB-007",
+          "Made of durable metal alloy",
+          "No maker's mark",
+          "Found near restricted access points"
+        ],
+        "properties": {
+          "dated_today": false,
+          "signed_by": null,
+          "name_matches_player": false
+        },
+        "supports": "Could suggest unauthorized entry attempts, which would harm your case.",
+        "art_key": "pry_bar",
+        "role": "incriminating"
+      }
+    ],
+    "session_id": "sess_20260821_002516"
+  },
+  "player_type": "human",
+  "model": "deepseek-r1:14b",
+  "outcome": "INCOMPLETE",
+  "turns_taken": 1,
+  "turns": [
+    {
+      "turn": 1,
+      "player_input": "\"There's no problem here — I'm authorised to be in these areas. I've got a signed access authorisation and the server room documentation. I was just here after hours to return a document I left yesterday; traffic held me up.",
+      "examined_at_time": [
+        "signed_authorisation",
+        "server_asset_tag"
+      ],
+      "evidence_result": "Known properties of examined objects:\n  - signed_authorisation: dated_today=True, name_matches_player=False, signed_by=Dr. Evans\n  - server_asset_tag: dated_today=False, name_matches_player=False, signed_by=None",
+      "gatekeeper_reasoning": "The player claims they were delayed by traffic while returning a document left yesterday. However, the signed authorization is dated today, which raises questions about how they could have been delayed yesterday when this authorization wasn't yet available. Additionally, the server asset tag doesn't directly support their claim of returning a document. These inconsistencies make it difficult to fully trust their explanation.",
+      "gatekeeper_response": "I appreciate your cooperation, but there are discrepancies in your story that I need to clarify further before granting access.",
+      "decision_type": "REQUEST_EVIDENCE"
+    }
+  ],
+  "started_at": "2026-08-21T00:25:16",
+  "ended_at": null
+}

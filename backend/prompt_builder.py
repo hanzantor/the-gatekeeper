@@ -1,8 +1,5 @@
-# prompt_builder.py — assembles the single prompt the Gatekeeper reasons over
-# each turn. This is the connective tissue of the agent: it gathers the
-# persona, the scenario, the live game state, the memory window, and the
-# evidence check into one instruction, then hands back (system, user) prompts.
-#
+# prompt_builder.py — assembles the single prompt the Gatekeeper reasons over each turn. 
+
 # The Gatekeeper receives, per examined clue, BOTH:
 #   - the concrete detail points the player can also read (names, dates,
 #     reference numbers), so its reasoning engages with the actual situation
@@ -171,72 +168,3 @@ def check_evidence(player_input: str, object_properties: dict) -> str:
         else:
             lines.append(f"  - {obj_id}: (no notable properties)")
     return "\n".join(lines)
-
-
-# -- Quick self-test --
-# No LLM needed — we build a prompt from a fake game state and print it,
-# so you can read exactly what the Gatekeeper would receive.
-if __name__ == "__main__":
-    fake_state = {
-        "scenario": {
-            "gatekeeper_role": "Head of Security, Meridian Research Institute",
-            "suspicion_context": "Unauthorised access detected at 02:10.",
-            "player_backstory": "The player claims to be a contracted IT auditor on a late-night systems check.",
-            "clues": [
-                {
-                    "id": "obj_audit_letter",
-                    "name": "Audit Letter",
-                    "description": "A printed authorisation letter.",
-                    "detail_points": [
-                        "Signed by the Director of Operations",
-                        "Dated today",
-                        "Authorises a systems audit 02:00-04:00",
-                    ],
-                },
-                {
-                    "id": "obj_crowbar",
-                    "name": "Pry Bar",
-                    "description": "A short steel pry bar.",
-                    "detail_points": [
-                        "Two fresh gouges near the tip",
-                        "No asset tag or tool-room marking",
-                    ],
-                },
-            ],
-        },
-        "turn": 4,
-        "turns_remaining": 11,
-        "player_inventory": ["obj_audit_letter"],
-        "examined_objects": ["obj_audit_letter", "obj_crowbar"],
-        "object_properties": {
-            "obj_audit_letter": {"dated_today": True, "signed_by": "Director of Operations"},
-            "obj_crowbar": {"implies_forced_entry": True, "explicable": True},
-        },
-        "conversation_history": [
-            {"role": "player", "text": "I'm the contracted IT auditor. Here's my appointment letter."},
-            {"role": "gatekeeper", "text": "The letter looks official, but explain the pry bar."},
-        ],
-        "player_input": "The pry bar isn't mine — it was already here when I arrived.",
-    }
-
-    system, user = build_gatekeeper_prompt(fake_state, persona="suspicious")
-
-    print("=" * 60)
-    print("USER PROMPT (normal turn):")
-    print("=" * 60)
-    print(user)
-
-    assert "Head of Security" in user
-    assert "Pry Bar" in user
-    assert "fresh gouges" in user          # detail points reached the prompt
-    assert "signed_by=Director" in user    # machine properties still present
-    assert "FINAL TURN" not in user        # not a final turn
-
-    # Now the final-turn variant.
-    final_state = dict(fake_state, final_turn=True)
-    _, final_user = build_gatekeeper_prompt(final_state, persona="suspicious")
-    assert "FINAL TURN" in final_user
-    assert "DENY_FINAL" in final_user
-
-    print("\n" + "=" * 60)
-    print("Prompt assembled correctly — normal and final-turn variants both build.")

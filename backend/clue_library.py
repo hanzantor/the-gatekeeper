@@ -1,11 +1,7 @@
 # clue_library.py — clue catalogue + the picker that builds a balanced set per scenario.
-# Structure lives here in Python, not in the model, so every scenario is solvable and fair.
 
 import random
 
-# Each clue: id (canonical key), art_key (sprite file), role, room ("shared" or a specific room).
-# Some clues reuse a sprite on purpose (fewer sprites than clues), so the picker never puts
-# two clues sharing an art_key in the same room.
 CLUE_LIBRARY = [
     # supporting
     {"id": "appointment_letter",  "art_key": "appointment_letter", "role": "supporting",   "name": "Appointment Letter",      "room": "shared"},

@@ -5,7 +5,7 @@ OLLAMA_URL = "http://localhost:11434/api/chat"
 OLLAMA_TIMEOUT_SECONDS = 300
 
 # Model switch: True = 8b (dev), False = 14b (eval)
-DEV_MODE = True
+DEV_MODE = False
 MODEL_DEV  = "deepseek-r1:8b"
 MODEL_EVAL = "deepseek-r1:14b"
 ACTIVE_MODEL = MODEL_DEV if DEV_MODE else MODEL_EVAL

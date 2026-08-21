@@ -15,6 +15,7 @@
 // same text. `id` is unique per clue; `art_key` is not.
 
 import { useState, useEffect, useMemo } from 'react'
+import { createPortal } from 'react-dom'
 import { MARKERS } from './data/markers.js'
 import { getClueArt } from './data/clueArtMap.js'
 import { getScenario, sendTurn, GatekeeperClientError } from './api/gatekeeperClient.js'
@@ -64,6 +65,11 @@ function App() {
   const [persona, setPersona] = useState(null)
   const [talking, setTalking] = useState(false)
 
+  // Pre-game briefing overlay. Shows the player's role, cover story and the
+  // accusation before play begins. Starts open on every new scenario, and can
+  // be re-opened mid-game from the status bar.
+  const [briefingOpen, setBriefingOpen] = useState(true)
+
   const [scenario, setScenario] = useState(null)
   const [scenarioLoading, setScenarioLoading] = useState(false)
   const [scenarioError, setScenarioError] = useState(null)
@@ -91,6 +97,7 @@ function App() {
     setGkError(null)
     setOutcome(null)
     setTalking(false)
+    setBriefingOpen(true) // show the briefing again for the new scenario
     getScenario(chosenPersona)
       .then(setScenario)
       .catch((err) => {
@@ -334,6 +341,12 @@ function App() {
         <span>
           Turns remaining: <strong>{turnsRemaining}</strong>
         </span>
+        <button
+          className="statusbar-briefing"
+          onClick={() => setBriefingOpen(true)}
+        >
+          Briefing
+        </button>
         <span className="statusbar-hint">
           {outcome === 'ESCAPE'
             ? 'The door is open. You are free.'
@@ -359,6 +372,61 @@ function App() {
           onClose={() => setTalking(false)}
         />
       )}
+
+      {/* Rendered through a portal onto <body> so `position: fixed` pins to the
+          viewport, not to any transformed ancestor inside .app. */}
+      {briefingOpen &&
+        createPortal(
+          <div
+            className="briefing-backdrop"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Mission briefing"
+          >
+            <div className="briefing-panel">
+              <button
+                className="briefing-close"
+                onClick={() => setBriefingOpen(false)}
+                aria-label="Close briefing"
+              >
+                ×
+              </button>
+
+              <p className="briefing-eyebrow">YOUR BRIEFING</p>
+              <h2 className="briefing-role">
+                You are being questioned by{' '}
+                {scenario.gatekeeper_role ?? 'the Gatekeeper'}
+              </h2>
+
+              {scenario.player_backstory && (
+                <div className="briefing-block">
+                  <span className="briefing-label">Your cover story</span>
+                  <p className="briefing-text">{scenario.player_backstory}</p>
+                </div>
+              )}
+
+              {scenario.suspicion_context && (
+                <div className="briefing-block">
+                  <span className="briefing-label">Why you're under suspicion</span>
+                  <p className="briefing-text">{scenario.suspicion_context}</p>
+                </div>
+              )}
+
+              <p className="briefing-hint">
+                Search the room for evidence, then click the Gatekeeper to make
+                your case.
+              </p>
+
+              <button
+                className="briefing-begin"
+                onClick={() => setBriefingOpen(false)}
+              >
+                Begin
+              </button>
+            </div>
+          </div>,
+          document.body
+        )}
     </div>
   )
 }
