@@ -1,0 +1,135 @@
+{
+  "session_id": "sess_20260820_210854",
+  "persona": "fair",
+  "scenario_id": "scenario_82966",
+  "intended_outcome": "should-escape",
+  "scenario": {
+    "scenario_id": "scenario_82966",
+    "room_background": "hospital",
+    "intended_outcome": "should-escape",
+    "persona": "fair",
+    "gatekeeper_role": "Nurse Manager",
+    "suspicion_context": "You are an outsider in a hospital without an appointment, claiming to know a patient here.",
+    "player_backstory": "You claim to be visiting a family member who is a patient in the hospital but don't have an appointment or identification.",
+    "clues": [
+      {
+        "id": "jacket",
+        "name": "Jacket on a Chair",
+        "description": "A white lab coat with the hospital logo.",
+        "detail_points": [
+          "Property of Biocontainment Wing, Department of Infectious Diseases",
+          "Pocket contains a ID badge for Dr. Markham",
+          "Coat has several patches and a penelope charm"
+        ],
+        "properties": {
+          "belongs_to": "Dr. Markham",
+          "department": "Infectious Diseases",
+          "authentic": true
+        },
+        "supports": "If this jacket is legitimate, it could explain your presence.",
+        "art_key": "jacket",
+        "role": "neutral"
+      },
+      {
+        "id": "coffee_mugs",
+        "name": "Two Coffee Mugs",
+        "description": "A pair of ceramic mugs with hospital branding.",
+        "detail_points": [
+          "One mug has a DNA swab sample sticker, date: 14/04/23",
+          "Other mug belongs to Janitorial Services staff, ID: J-789"
+        ],
+        "properties": {
+          "hospital_property": true,
+          "dna_sample": true
+        },
+        "supports": "These mugs suggest a routine hospital presence.",
+        "art_key": "coffee_mug",
+        "role": "neutral"
+      },
+      {
+        "id": "appointment_letter",
+        "name": "Appointment Letter",
+        "description": "A typed letter on hospital stationary.",
+        "detail_points": [
+          "From the Oncology Department, Dr. Emily Carter",
+          "Date: 14 April 2023",
+          "Scheduling a patient visit for today at 2 PM"
+        ],
+        "properties": {
+          "dated_today": true,
+          "signed_by": "Dr. Emily Carter",
+          "appointment_time": "14:00"
+        },
+        "supports": "This supports your claim of having an appointment.",
+        "art_key": "appointment_letter",
+        "role": "supporting"
+      },
+      {
+        "id": "signed_authorisation",
+        "name": "Signed Authorisation",
+        "description": "A formal authorization document.",
+        "detail_points": [
+          "Authorises access to Restricted Ward R-9",
+          "Signed by Head Nurse, Jane Doe",
+          "Date: 12 April 2023"
+        ],
+        "properties": {
+          "signed_by": "Jane Doe",
+          "date_signed": "12/04/23",
+          "restricted_access": true
+        },
+        "supports": "This could explain your access to restricted areas.",
+        "art_key": "delivery_docket",
+        "role": "supporting"
+      },
+      {
+        "id": "burner_phone",
+        "name": "Burner Phone",
+        "description": "A basic mobile phone with no visible contacts.",
+        "detail_points": [
+          "Recent texts: 'Avoid security at all costs' - 14/04 13:57",
+          "Texts mention patient 'Sarah Collins'",
+          "No saved contacts or call history"
+        ],
+        "properties": {
+          "recent_messages": true,
+          "encrypted": false
+        },
+        "supports": "This phone raises questions about your intentions.",
+        "art_key": "burner_phone",
+        "role": "incriminating"
+      }
+    ],
+    "session_id": "sess_20260820_210854"
+  },
+  "player_type": "human",
+  "model": "deepseek-r1:14b",
+  "outcome": "LOCKED",
+  "turns_taken": 2,
+  "turns": [
+    {
+      "turn": 1,
+      "player_input": "Look, I'll be straight with you — I found this phone, and yes, there's a text about avoiding security and a mention of Sarah Collins. But I can explain it. She's my family member, and I only wanted to reach her ward without a fuss.",
+      "examined_at_time": [
+        "burner_phone"
+      ],
+      "evidence_result": "Known properties of examined objects:\n  - burner_phone: encrypted=False, recent_messages=True",
+      "gatekeeper_reasoning": "The player's claim that Sarah Collins is a family member is supported by the text mentioning her name but lacks credible proof such as ID or an appointment. The burner phone with recent texts advising to avoid security adds suspicion. Without concrete evidence, their explanation isn't fully convincing.",
+      "gatekeeper_response": "I appreciate your candor, but I need more substantial proof of your relationship to Sarah Collins. Identification or a hospital appointment would be more convincing.",
+      "decision_type": "REQUEST_EVIDENCE"
+    },
+    {
+      "turn": 2,
+      "player_input": "I really don't have paperwork. Look — the only thing I've got is this phone, and yes, one of the messages says to avoid security, but that's just because I didn't want to be stopped at the desk. I'm only trying to reach Sarah.",
+      "examined_at_time": [
+        "burner_phone"
+      ],
+      "evidence_result": "Known properties of examined objects:\n  - burner_phone: encrypted=False, recent_messages=True",
+      "gatekeeper_reasoning": "The player's claim relies solely on the burner phone mentioning Sarah Collins and advising to avoid security. However, this evidence is insufficient as it doesn't establish a direct familial relationship or validate their identity. The lack of identification or appointment creates doubt about their legitimacy.",
+      "gatekeeper_response": "I understand your situation, but I need more concrete proof of your identity and relation to Sarah Collins before I can allow you access. Please return with proper documentation.",
+      "decision_type": "DENY_FINAL"
+    }
+  ],
+  "started_at": "2026-08-20T21:08:54",
+  "ended_at": "2026-08-20T21:12:10"
+}
