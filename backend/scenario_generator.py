@@ -7,7 +7,14 @@
 #   properties    : machine-readable flags for the evidence check. Never shown to the player.
 #   detail_points : 3-4 short fragments the player reads (names, dates, reference numbers).
 # Location is banned in all generated text — Python's marker system places objects, not the model.
+#
+# MATCHED RUNS (evaluation): a generated scenario can be frozen to disk with save_fixture
+# and replayed with load_fixture. Every persona/model combination then faces the identical
+# room, clues, art_keys and properties; only the runtime persona label is swapped in. This
+# is what makes controlled persona/model comparison valid despite generation being
+# persona-conditioned.
 
+import os
 import json
 import random
 import config
@@ -16,8 +23,11 @@ from clue_library import select_clues
 
 ROOMS = ["research_lab", "hospital", "office", "government"]
 
-# set True to print raw model output before parsing (diagnoses silent fallbacks); False for the demo
-DEBUG_RAW = True
+# frozen matched scenarios are saved here (one JSON per fixture name)
+FIXTURE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fixtures")
+
+# set True to print raw model output before parsing (diagnoses silent fallbacks); False for clean runs
+DEBUG_RAW = False
 
 
 def generate_scenario(persona: str, seed: str = "") -> dict:
@@ -68,6 +78,28 @@ def generate_scenario(persona: str, seed: str = "") -> dict:
         "player_backstory": scenario_body.get("player_backstory", "You claim to have legitimate business here."),
         "clues": scenario_body.get("clues", []),
     }
+    return scenario
+
+
+# ── Matched-run fixtures ───────────────────────────────────────
+def save_fixture(name: str, scenario: dict) -> None:
+    # Freeze a generated scenario to disk so it can be replayed unchanged.
+    os.makedirs(FIXTURE_DIR, exist_ok=True)
+    path = os.path.join(FIXTURE_DIR, f"{name}.json")
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(scenario, f, indent=2, ensure_ascii=False)
+
+
+def load_fixture(name: str, persona: str) -> dict:
+    # Replay a frozen scenario. The saved file pins room, clues, art_keys,
+    # detail_points and properties; only the persona label is swapped in, so the
+    # same structure is faced by every persona/model combination. A fresh
+    # scenario_id is minted per replay so each session logs distinctly.
+    path = os.path.join(FIXTURE_DIR, f"{name}.json")
+    with open(path, "r", encoding="utf-8") as f:
+        scenario = json.load(f)
+    scenario["persona"] = persona
+    scenario["scenario_id"] = f"scenario_{random.randint(10000, 99999)}"
     return scenario
 
 

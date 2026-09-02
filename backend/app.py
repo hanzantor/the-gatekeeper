@@ -14,12 +14,18 @@
 # of the coherence metric. /api/scenario mints a session_id and returns it;
 # the frontend echoes it back on every /api/gatekeeper call so turns attach to
 # the right session.
+#
+# MATCHED RUNS (evaluation): /api/scenario accepts two optional fields.
+#   "save_as": freeze the generated scenario to fixtures/<name>.json
+#   "fixture": skip generation and replay fixtures/<name>.json instead
+# This lets the same saved scenario be run across every persona/model
+# combination for controlled comparison.
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
 import config
-from scenario_generator import generate_scenario
+from scenario_generator import generate_scenario, save_fixture, load_fixture
 from prompt_builder import build_gatekeeper_prompt, check_evidence
 from llm_client import call_llm
 from response_parser import parse_gatekeeper_response
@@ -40,19 +46,34 @@ def scenario():
     """
     Generate a fresh scenario for a new session, and open its log.
     Expects JSON: { "persona": "suspicious", "seed": "optional",
-                    "player_type": "optional" }
-    Returns the scenario JSON with a `session_id` added.
+                    "player_type": "optional", "save_as": "optional",
+                    "fixture": "optional" }
+
+    If "fixture" is given, the saved scenario of that name is replayed
+    (generation is skipped). If "save_as" is given, the freshly generated
+    scenario is frozen to disk under that name. Returns the scenario JSON
+    with a `session_id` added.
     """
     data = request.get_json(force=True) or {}
     persona = data.get("persona", "fair")
     seed = data.get("seed", "")
     player_type = data.get("player_type", "human")
+    save_as = data.get("save_as", "")   # freeze this generated scenario to disk
+    fixture = data.get("fixture", "")   # replay a frozen matched scenario by name
 
     if persona not in ("suspicious", "fair", "corruptible"):
         return jsonify({"error": f"Unknown persona: {persona}"}), 400
 
     try:
-        result = generate_scenario(persona=persona, seed=seed)
+        if fixture:
+            result = load_fixture(fixture, persona)
+            scenario_source = fixture   # e.g. "matched_A" — groups the six matched logs
+        else:
+            result = generate_scenario(persona=persona, seed=seed)
+            if save_as:
+                save_fixture(save_as, result)
+            scenario_source = "generated"
+
         # Open a session log and hand the id back to the client, which will
         # echo it on every subsequent /api/gatekeeper call.
         session_id = logger.start_session(
@@ -60,9 +81,12 @@ def scenario():
             scenario=result,
             model=config.ACTIVE_MODEL,
             player_type=player_type,
+            scenario_source=scenario_source,
         )
         result["session_id"] = session_id
         return jsonify(result)
+    except FileNotFoundError:
+        return jsonify({"error": f"No fixture named: {fixture}"}), 404
     except Exception as e:
         return jsonify({"error": f"Scenario generation failed: {e}"}), 500
 

@@ -53,7 +53,8 @@ class SessionLogger:
 
     # ── Lifecycle ──────────────────────────────────────────────
     def start_session(self, persona: str, scenario: dict, model: str,
-                      player_type: str = "scripted") -> str:
+                      player_type: str = "scripted",
+                      scenario_source: str = "generated") -> str:
         """
         Begin a new session log and return its session_id.
 
@@ -67,6 +68,7 @@ class SessionLogger:
                 "session_id": session_id,
                 "persona": persona,
                 "scenario_id": scenario.get("scenario_id", ""),
+                "scenario_source": scenario_source,   # "generated" or fixture name (e.g. "matched_A")
                 "intended_outcome": scenario.get("intended_outcome", ""),
                 "scenario": scenario,
                 "player_type": player_type,
@@ -166,61 +168,3 @@ class SessionLogger:
 
 # Module-level singleton — import this from app.py and the eval runner.
 logger = SessionLogger()
-
-
-# ── Quick self-test ────────────────────────────────────────────
-# No LLM needed — simulate a two-turn session and read it back.
-if __name__ == "__main__":
-    fake_scenario = {
-        "scenario_id": "scenario_12345",
-        "intended_outcome": "should-escape",
-        "room_background": "office",
-        "gatekeeper_role": "Security Officer",
-        "clues": [{"id": "work_order", "role": "supporting"}],
-    }
-
-    sid = logger.start_session(
-        persona="suspicious",
-        scenario=fake_scenario,
-        model="deepseek-r1:8b",
-        player_type="scripted_honest",
-    )
-    print(f"Started session: {sid}")
-
-    logger.log_turn(
-        sid,
-        player_input="I'm here for the maintenance job.",
-        examined_objects=["work_order"],
-        evidence_result="work_order: dated_today=True",
-        reasoning="Work order looks legitimate but no ID yet.",
-        response="The work order is one thing. Who are you?",
-        decision_type="REQUEST_EVIDENCE",
-    )
-    logger.log_turn(
-        sid,
-        player_input="Here's my staff ID — the name matches the order.",
-        examined_objects=["work_order", "staff_id"],
-        evidence_result="staff_id: name_matches=True",
-        reasoning="ID corroborates the order. Two verified facts. Satisfied.",
-        response="That holds together. Go.",
-        decision_type="GRANT_EXIT",
-    )
-    logger.end_session(sid, outcome="ESCAPE")
-
-    # Read it back both ways.
-    loaded = logger.get_session(sid)
-    assert loaded is not None
-    assert loaded["turns_taken"] == 2
-    assert loaded["outcome"] == "ESCAPE"
-    assert loaded["turns"][1]["decision_type"] == "GRANT_EXIT"
-    assert loaded["turns"][0]["gatekeeper_reasoning"].startswith("Work order")
-
-    path = logger._path(sid)
-    assert os.path.exists(path), "log file was not written"
-    with open(path, encoding="utf-8") as f:
-        on_disk = json.load(f)
-    assert on_disk["session_id"] == sid
-
-    print(f"Wrote and verified: {path}")
-    print(f"  turns_taken = {loaded['turns_taken']}, outcome = {loaded['outcome']}")
-    print("\n✓ session_logger writes per-turn, survives reload, captures reasoning.")

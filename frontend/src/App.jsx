@@ -21,7 +21,7 @@ import { getClueArt } from './data/clueArtMap.js'
 import { getScenario, sendTurn, GatekeeperClientError } from './api/gatekeeperClient.js'
 import ClueDetailPanel from './ClueDetailPanel.jsx'
 import Inventory from './Inventory.jsx'
-import PersonaSelect from './PersonaSelect.jsx'
+import PersonaSelect from './Personaselect.jsx'
 import GatekeeperCharacter from './GatekeeperCharacter.jsx'
 import GatekeeperDialogue from './GatekeeperDialogue.jsx'
 import './App.css'
@@ -63,6 +63,9 @@ function App() {
   const [selectedClueId, setSelectedClueId] = useState(null)
   const [examinedClues, setExaminedClues] = useState(() => new Set())
   const [persona, setPersona] = useState(null)
+  // The full start request from the persona screen: { persona, saveAs, fixture }.
+  // saveAs/fixture are dev/eval controls; normal play sets only persona.
+  const [startRequest, setStartRequest] = useState(null)
   const [talking, setTalking] = useState(false)
 
   // Pre-game briefing overlay. Shows the player's role, cover story and the
@@ -85,7 +88,9 @@ function App() {
   // Gatekeeper character position, room-relative %.
   const GATEKEEPER_POSITION = { x: 46, y: 42 }
 
-  function loadScenario(chosenPersona) {
+  // opts.saveAs / opts.fixture are dev/eval controls for matched runs; normal
+  // play passes neither and gets a fresh generated scenario as before.
+  function loadScenario(chosenPersona, opts = {}) {
     setScenarioLoading(true)
     setScenarioError(null)
     // A new scenario means a new session — clear everything from the last one.
@@ -98,7 +103,7 @@ function App() {
     setOutcome(null)
     setTalking(false)
     setBriefingOpen(true) // show the briefing again for the new scenario
-    getScenario(chosenPersona)
+    getScenario(chosenPersona, opts)
       .then(setScenario)
       .catch((err) => {
         setScenarioError(
@@ -110,10 +115,15 @@ function App() {
       .finally(() => setScenarioLoading(false))
   }
 
-  // Fires once, right after a persona is chosen.
+  // Fires right after the persona screen submits a start request.
   useEffect(() => {
-    if (persona) loadScenario(persona)
-  }, [persona])
+    if (!startRequest) return
+    setPersona(startRequest.persona)
+    loadScenario(startRequest.persona, {
+      saveAs: startRequest.saveAs ?? '',
+      fixture: startRequest.fixture ?? '',
+    })
+  }, [startRequest])
 
   // markerId -> clue id. Keyed by clue id so two clues sharing a sprite
   // still occupy two distinct markers with their own content.
@@ -233,7 +243,7 @@ function App() {
 
   // -- Screen 1: no persona chosen yet --
   if (!persona) {
-    return <PersonaSelect onSelect={setPersona} />
+    return <PersonaSelect onStart={setStartRequest} />
   }
 
   // -- Screen 2: scenario is generating --
@@ -258,7 +268,12 @@ function App() {
           <button
             className="persona-card"
             style={{ maxWidth: 220, margin: '0 auto' }}
-            onClick={() => loadScenario(persona)}
+            onClick={() =>
+              loadScenario(persona, {
+                saveAs: startRequest?.saveAs ?? '',
+                fixture: startRequest?.fixture ?? '',
+              })
+            }
           >
             <span className="persona-card-name">Retry</span>
           </button>
@@ -331,17 +346,8 @@ function App() {
             <GatekeeperCharacter
               x={GATEKEEPER_POSITION.x}
               y={GATEKEEPER_POSITION.y}
-              state={
-                gkBusy
-                  ? 'talking'
-                  : outcome === 'ESCAPE'
-                  ? 'grant'
-                  : outcome === 'LOCKED'
-                  ? 'deny'
-                  : 'idle'
-              }
               onClick={() => setTalking(true)}
-              />
+            />
           </div>
         </div>
       </main>

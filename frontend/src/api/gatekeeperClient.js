@@ -75,15 +75,20 @@ export class GatekeeperClientError extends Error {
 }
 
 /**
- * POST /api/scenario — generates a fresh scenario for a new session.
+ * POST /api/scenario — starts a new session.
  * @param {string} persona  'suspicious' | 'fair' | 'corruptible'
- * @param {string} [seed]   optional theme hint, per spec §15
+ * @param {object} [opts]
+ * @param {string} [opts.seed]     optional theme hint, per spec §15
+ * @param {string} [opts.saveAs]   dev/eval only: freeze the generated scenario
+ *                                  to fixtures/<name>.json for matched runs
+ * @param {string} [opts.fixture]  dev/eval only: replay a frozen scenario by
+ *                                  name instead of generating a fresh one
  * @returns {Promise<object>} full scenario JSON (spec §5)
  */
-export function getScenario(persona, seed = '') {
+export function getScenario(persona, { seed = '', saveAs = '', fixture = '' } = {}) {
   return request('/api/scenario', {
     method: 'POST',
-    body: JSON.stringify({ persona, seed }),
+    body: JSON.stringify({ persona, seed, save_as: saveAs, fixture }),
   });
 }
 
