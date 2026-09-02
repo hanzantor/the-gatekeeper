@@ -1,0 +1,154 @@
+{
+  "session_id": "sess_20260826_015647",
+  "persona": "fair",
+  "scenario_id": "scenario_21550",
+  "intended_outcome": "should-escape",
+  "scenario": {
+    "scenario_id": "scenario_21550",
+    "room_background": "government",
+    "intended_outcome": "should-escape",
+    "persona": "fair",
+    "gatekeeper_role": "Government Security Officer",
+    "suspicion_context": "You were found loitering near restricted access zones in the government building.",
+    "player_backstory": "You claim to be here for a routine audit of security protocols, though no such audit is scheduled in the system.",
+    "clues": [
+      {
+        "id": "wrong_keycard",
+        "name": "Security Keycard (Someone Else's)",
+        "description": "A security keycard with access restrictions.",
+        "detail_points": [
+          "Access level: Restricted Zone 3",
+          "Encoded to ID: AG-423",
+          "Expires: 10/12/23",
+          "No biometric scan recorded"
+        ],
+        "properties": {
+          "access_level": "Restricted",
+          "encoded_id": "AG-423",
+          "expired": false,
+          "biometric_scan": false
+        },
+        "supports": "Could suggest unauthorized access if linked to you.",
+        "art_key": "access_badge",
+        "role": "incriminating"
+      },
+      {
+        "id": "work_order",
+        "name": "Maintenance Work Order",
+        "description": "A work order for system maintenance.",
+        "detail_points": [
+          "Reference number: MO-2023-456",
+          "Requested by: Facilities Management",
+          "Approved by: Dr. Emily Carter",
+          "Missing section: Authorization signature"
+        ],
+        "properties": {
+          "reference_number": "MO-2023-456",
+          "requested_by": "Facilities Management",
+          "approved_by": "Dr. Emily Carter",
+          "signed": false
+        },
+        "supports": "Might support your claim if linked to maintenance work.",
+        "art_key": "work_order",
+        "role": "supporting"
+      },
+      {
+        "id": "potted_plant",
+        "name": "Potted Plant",
+        "description": "A small potted plant with a care tag.",
+        "detail_points": [
+          "Species: Snake Plant",
+          "Pot number: 789",
+          "Last watered: 9/11/23",
+          "No recorded location"
+        ],
+        "properties": {
+          "species": "Snake Plant",
+          "pot_number": "789",
+          "last_watered": "9/11/23",
+          "location": false
+        },
+        "supports": "Neutral, unless linked to someone else.",
+        "art_key": "potted_plant",
+        "role": "neutral"
+      },
+      {
+        "id": "signed_authorisation",
+        "name": "Signed Authorization Document",
+        "description": "A document authorizing access to restricted areas.",
+        "detail_points": [
+          "Authorized by: Director of Security",
+          "Date: 9/10/23",
+          "Access granted to: Level 4",
+          "No visitor designation listed"
+        ],
+        "properties": {
+          "authorized_by": "Director of Security",
+          "date": "9/10/23",
+          "access_level": "4",
+          "visitor_designation": false
+        },
+        "supports": "Could support legitimate access if properly explained.",
+        "art_key": "delivery_docket",
+        "role": "supporting"
+      },
+      {
+        "id": "jacket",
+        "name": "Jacket on a Chair",
+        "description": "A professional jacket with security tags.",
+        "detail_points": [
+          "Size: Medium",
+          "Tag number: ST-2023-789",
+          "Manufactured by: GovMall",
+          "No name tag attached"
+        ],
+        "properties": {
+          "size": "Medium",
+          "tag_number": "ST-2023-789",
+          "manufacturer": "GovMall",
+          "name_tag": false
+        },
+        "supports": "Could indicate prior visit if linked to someone else.",
+        "art_key": "jacket",
+        "role": "neutral"
+      }
+    ],
+    "session_id": "sess_20260826_015647"
+  },
+  "player_type": "human",
+  "model": "deepseek-r1:14b",
+  "outcome": "ESCAPE",
+  "turns_taken": 2,
+  "turns": [
+    {
+      "turn": 1,
+      "player_input": "I was near those zones because I hold authorised access. The signed authorisation document confirms it — approved by the Director of Security, granting Level 4 access, dated and on record. That's the basis for my presence here. If there's a keycard in question, note it's encoded to ID AG-423, not mine, and carries no biometric scan — it isn't linked to me.",
+      "examined_at_time": [
+        "wrong_keycard",
+        "work_order",
+        "signed_authorisation",
+        "jacket"
+      ],
+      "evidence_result": "Known properties of examined objects:\n  - wrong_keycard: access_level=Restricted, biometric_scan=False, encoded_id=AG-423, expired=False\n  - work_order: approved_by=Dr. Emily Carter, reference_number=MO-2023-456, requested_by=Facilities Management, signed=False\n  - signed_authorisation: access_level=4, authorized_by=Director of Security, date=9/10/23, visitor_designation=False\n  - jacket: manufacturer=GovMall, name_tag=False, size=Medium, tag_number=ST-2023-789",
+      "gatekeeper_reasoning": "The player claims authorized access via a signed document, but the work order lacks a signature and the keycard doesn't match their ID. These inconsistencies raise doubts about their legitimacy.",
+      "gatekeeper_response": "Your authorization document does support Level 4 access, but the missing signature on the work order and the unrelated keycard raise concerns. I need further clarification.",
+      "decision_type": "REQUEST_EVIDENCE"
+    },
+    {
+      "turn": 2,
+      "player_input": "To clarify both points: my access rests on the signed authorisation document, which is complete — approved by the Director of Security for Level 4, dated and on record. The work order is a separate facilities item; its missing signature doesn't bear on my authorisation. As for the keycard, it's encoded to ID AG-423, not me, with no biometric scan recorded — it belongs to someone else and isn't linked to my presence here.",
+      "examined_at_time": [
+        "wrong_keycard",
+        "work_order",
+        "signed_authorisation",
+        "jacket"
+      ],
+      "evidence_result": "Known properties of examined objects:\n  - wrong_keycard: access_level=Restricted, biometric_scan=False, encoded_id=AG-423, expired=False\n  - work_order: approved_by=Dr. Emily Carter, reference_number=MO-2023-456, requested_by=Facilities Management, signed=False\n  - signed_authorisation: access_level=4, authorized_by=Director of Security, date=9/10/23, visitor_designation=False\n  - jacket: manufacturer=GovMall, name_tag=False, size=Medium, tag_number=ST-2023-789",
+      "gatekeeper_reasoning": "The player's signed authorization document is complete and valid, granting Level 4 access. The missing signature on the work order and the unrelated keycard do not implicate the player's presence. The player's clarification resolves the earlier concerns.",
+      "gatekeeper_response": "Your signed authorization document is valid, and the other items do not appear to be connected to your authorized presence. I have no further cause to detain you.",
+      "decision_type": "GRANT_EXIT"
+    }
+  ],
+  "started_at": "2026-08-26T01:56:47",
+  "ended_at": "2026-08-26T02:01:01"
+}

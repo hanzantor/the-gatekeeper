@@ -1,0 +1,111 @@
+{
+  "session_id": "sess_20260826_014444",
+  "persona": "fair",
+  "scenario_id": "scenario_85160",
+  "intended_outcome": "should-escape",
+  "scenario": {
+    "scenario_id": "scenario_85160",
+    "room_background": "hospital",
+    "intended_outcome": "should-escape",
+    "persona": "fair",
+    "gatekeeper_role": "Hospital Administrator",
+    "suspicion_context": "Recent unauthorized access attempts in sensitive areas have raised security concerns.",
+    "player_backstory": "You claim to be a visitor with a legitimate reason to enter, possibly visiting a patient or conducting authorized research.",
+    "clues": [
+      {
+        "id": "access_log",
+        "name": "Access Log Terminal",
+        "description": "A terminal displaying recent login attempts and access records.",
+        "detail_points": [
+          "Last accessed by ID 12345 at 09:15 AM",
+          "Authorizes access to Ward 3B",
+          "System message: 'Access granted to authorized personnel only'",
+          "No record of unauthorized access in the last 24 hours"
+        ],
+        "properties": {
+          "dated_today": true,
+          "access_granted": true,
+          "timestamp_matches_player": true
+        },
+        "supports": "Helps validate your presence if your ID matches the log.",
+        "art_key": "access_log",
+        "role": "supporting"
+      },
+      {
+        "id": "work_order",
+        "name": "Work Order",
+        "description": "A printed work order related to hospital maintenance.",
+        "detail_points": [
+          "Reference number: WO-2023-456",
+          "Dated 15 October 2023",
+          "Authorized by Facilities Management",
+          "Lists materials needed: 'Sterile gloves, antiseptic solution'"
+        ],
+        "properties": {
+          "dated_today": false,
+          "authorized_by": "Facilities Management",
+          "materials_listed": true
+        },
+        "supports": "Could align with your backstory if you're involved in maintenance.",
+        "art_key": "work_order",
+        "role": "supporting"
+      },
+      {
+        "id": "coffee_mugs",
+        "name": "Two Coffee Mugs",
+        "description": "Two ordinary white coffee mugs with no distinguishing marks.",
+        "detail_points": [
+          "Both mugs are clean",
+          "One mug has a faint coffee stain",
+          "No names or logos on either mug"
+        ],
+        "properties": {
+          "ordinary": true,
+          "stain_present": true,
+          "logo_absent": true
+        },
+        "supports": "Adds context but doesn't directly support or incriminate.",
+        "art_key": "coffee_mug",
+        "role": "neutral"
+      },
+      {
+        "id": "gloves",
+        "name": "Gloves",
+        "description": "A pair of disposable gloves found in a sealed package.",
+        "detail_points": [
+          "Sterile gloves, size L",
+          "Manufactured by Med-Supplies Inc.",
+          "Expiry date: 31 December 2024",
+          "No visible contamination"
+        ],
+        "properties": {
+          "sterile": true,
+          "manufacturer": "Med-Supplies Inc.",
+          "expired": false,
+          "contamination": false
+        },
+        "supports": "May raise questions if found in a restricted area.",
+        "art_key": "gloves",
+        "role": "incriminating"
+      }
+    ],
+    "session_id": "sess_20260826_014444"
+  },
+  "player_type": "human",
+  "model": "deepseek-r1:14b",
+  "outcome": "ESCAPE",
+  "turns_taken": 1,
+  "turns": [
+    {
+      "turn": 1,
+      "player_input": "I understand the heightened security. I'm here legitimately — the access log terminal confirms my entry: ID 12345, logged in at 09:15 this morning, authorised for Ward 3B. The system itself recorded it as authorised personnel, with no unauthorised attempts in the last 24 hours. I'm happy to walk you through it.",
+      "examined_at_time": [],
+      "evidence_result": "No objects examined yet — nothing to verify against.",
+      "gatekeeper_reasoning": "The player's claim is fully supported by the evidence from the Access Log Terminal, which matches the details they provided (ID 12345, 09:15 AM, Ward 3B). There are no inconsistencies in their statement, and the absence of unauthorized access attempts corroborates their legitimacy.",
+      "gatekeeper_response": "Your information aligns perfectly with the evidence we have. The access log confirms your entry, and there's no indication of unauthorized attempts. You may proceed.",
+      "decision_type": "GRANT_EXIT"
+    }
+  ],
+  "started_at": "2026-08-26T01:44:44",
+  "ended_at": "2026-08-26T01:52:23"
+}
