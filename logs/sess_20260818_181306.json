@@ -1,0 +1,74 @@
+{
+  "session_id": "sess_20260818_181306",
+  "persona": "fair",
+  "scenario_id": "scenario_72065",
+  "intended_outcome": "should-escape",
+  "scenario": {
+    "scenario_id": "scenario_72065",
+    "room_background": "hospital",
+    "intended_outcome": "should-escape",
+    "persona": "fair",
+    "gatekeeper_role": "Security Officer",
+    "suspicion_context": "You were found in a restricted area late at night.",
+    "player_backstory": "You claim to be here for legitimate reasons.",
+    "clues": [
+      {
+        "id": "potted_plant",
+        "name": "Potted Plant",
+        "description": "A potted plant.",
+        "detail_points": [],
+        "properties": {},
+        "supports": "neutral",
+        "art_key": "potted_plant",
+        "role": "neutral"
+      },
+      {
+        "id": "email_printout",
+        "name": "Email Printout",
+        "description": "A email printout.",
+        "detail_points": [],
+        "properties": {},
+        "supports": "supporting",
+        "art_key": "email_printout",
+        "role": "supporting"
+      },
+      {
+        "id": "pry_bar",
+        "name": "Pry Bar",
+        "description": "A pry bar.",
+        "detail_points": [],
+        "properties": {},
+        "supports": "incriminating",
+        "art_key": "pry_bar",
+        "role": "incriminating"
+      },
+      {
+        "id": "access_log",
+        "name": "Access Log Terminal",
+        "description": "A access log terminal.",
+        "detail_points": [],
+        "properties": {},
+        "supports": "supporting",
+        "art_key": "access_log",
+        "role": "supporting"
+      },
+      {
+        "id": "ward_roster",
+        "name": "Ward Access Roster",
+        "description": "A ward access roster.",
+        "detail_points": [],
+        "properties": {},
+        "supports": "supporting",
+        "art_key": "delivery_docket",
+        "role": "supporting"
+      }
+    ]
+  },
+  "player_type": "human",
+  "model": "deepseek-r1:8b",
+  "outcome": "INCOMPLETE",
+  "turns_taken": 0,
+  "turns": [],
+  "started_at": "2026-08-18T18:13:06",
+  "ended_at": null
+}

@@ -1,0 +1,84 @@
+{
+  "session_id": "sess_20260818_182422",
+  "persona": "fair",
+  "scenario_id": "scenario_73861",
+  "intended_outcome": "should-escape",
+  "scenario": {
+    "scenario_id": "scenario_73861",
+    "room_background": "government",
+    "intended_outcome": "should-escape",
+    "persona": "fair",
+    "gatekeeper_role": "Security Officer",
+    "suspicion_context": "You were found in a restricted area late at night.",
+    "player_backstory": "You claim to be here for legitimate reasons.",
+    "clues": [
+      {
+        "id": "food_wrapper",
+        "name": "Food Wrapper",
+        "description": "A food wrapper.",
+        "detail_points": [],
+        "properties": {},
+        "supports": "neutral",
+        "art_key": "food_wrapper",
+        "role": "neutral"
+      },
+      {
+        "id": "email_printout",
+        "name": "Email Printout",
+        "description": "A email printout.",
+        "detail_points": [],
+        "properties": {},
+        "supports": "supporting",
+        "art_key": "email_printout",
+        "role": "supporting"
+      },
+      {
+        "id": "wrong_keycard",
+        "name": "Someone Else's Keycard",
+        "description": "A someone else's keycard.",
+        "detail_points": [],
+        "properties": {},
+        "supports": "incriminating",
+        "art_key": "access_badge",
+        "role": "incriminating"
+      },
+      {
+        "id": "framed_photo",
+        "name": "Framed Photo",
+        "description": "A framed photo.",
+        "detail_points": [],
+        "properties": {},
+        "supports": "neutral",
+        "art_key": "framed_photo",
+        "role": "neutral"
+      },
+      {
+        "id": "asset_tag_equipment",
+        "name": "Asset-Tagged Equipment",
+        "description": "A asset-tagged equipment.",
+        "detail_points": [],
+        "properties": {},
+        "supports": "supporting",
+        "art_key": "manual",
+        "role": "supporting"
+      },
+      {
+        "id": "potted_plant",
+        "name": "Potted Plant",
+        "description": "A potted plant.",
+        "detail_points": [],
+        "properties": {},
+        "supports": "neutral",
+        "art_key": "potted_plant",
+        "role": "neutral"
+      }
+    ]
+  },
+  "player_type": "human",
+  "model": "deepseek-r1:8b",
+  "outcome": "INCOMPLETE",
+  "turns_taken": 0,
+  "turns": [],
+  "started_at": "2026-08-18T18:24:22",
+  "ended_at": null
+}

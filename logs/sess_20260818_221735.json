@@ -1,0 +1,142 @@
+{
+  "session_id": "sess_20260818_221735",
+  "persona": "fair",
+  "scenario_id": "scenario_31335",
+  "intended_outcome": "should-escape",
+  "scenario": {
+    "scenario_id": "scenario_31335",
+    "room_background": "office",
+    "intended_outcome": "should-escape",
+    "persona": "fair",
+    "gatekeeper_role": "Facility Security Specialist",
+    "suspicion_context": "You were seen lingering near restricted areas after hours last night.",
+    "player_backstory": "You claim to be here for an urgent meeting with HR regarding a sensitive matter.",
+    "clues": [
+      {
+        "id": "food_wrapper",
+        "name": "Food Wrapper",
+        "description": "A crumpled wrapper from a nearby café.",
+        "detail_points": [
+          "Shows remnants of a sandwich purchased at Metro Café, 2nd Street.",
+          "Time stamp indicates purchase around 1:30 PM.",
+          "Wrapper has no name or identifying marks."
+        ],
+        "properties": {
+          "dated_today": false,
+          "name_matches_player": false
+        },
+        "supports": "Adds to your presence in the building but doesn’t directly link you to any suspicious activity.",
+        "art_key": "food_wrapper",
+        "role": "neutral"
+      },
+      {
+        "id": "access_log",
+        "name": "Access Log Terminal",
+        "description": "A terminal with recent security access logs.",
+        "detail_points": [
+          "Last accessed by 'HR-Secure' at 12:45 PM.",
+          "Shows multiple failed attempts from your IP address between 10:30 PM and midnight.",
+          "No entry for post-midnight movement after those attempts."
+        ],
+        "properties": {
+          "dated_today": true,
+          "failed_attempts": true
+        },
+        "supports": "Could help explain your presence if you can account for the failed logins.",
+        "art_key": "access_log",
+        "role": "supporting"
+      },
+      {
+        "id": "server_asset_tag",
+        "name": "Server Rack Asset Tag",
+        "description": "A tag on a server rack listing its asset details.",
+        "detail_points": [
+          "Asset ID: SVR-20456789.",
+          "Location: 3rd Floor, Data Center.",
+          "Date installed: 15 October 2022.",
+          "No unauthorized modifications noted."
+        ],
+        "properties": {
+          "authorized_access_only": true,
+          "dated_recently": false
+        },
+        "supports": "Helps confirm legitimate access to authorized areas if needed.",
+        "art_key": "manual",
+        "role": "supporting"
+      },
+      {
+        "id": "jacket",
+        "name": "Jacket on a Chair",
+        "description": "A professional blazer left on an office chair.",
+        "detail_points": [
+          "Has lint from nearby carpet fibers.",
+          "No pockets appear disturbed.",
+          "Brand tag shows it was purchased in 2023."
+        ],
+        "properties": {
+          "fibers_matched_to_carpet": true,
+          "pockets_intact": true
+        },
+        "supports": "Doesn’t provide direct evidence but adds context to your presence.",
+        "art_key": "jacket",
+        "role": "neutral"
+      },
+      {
+        "id": "torch",
+        "name": "Torch",
+        "description": "A small flashlight with some wax residue.",
+        "detail_points": [
+          "Wax matches the scent of beeswax candles used in the conference room.",
+          "No recent usage indicators on the battery life.",
+          "Serial number: FL-789456."
+        ],
+        "properties": {
+          "residue_matches_conference_room": true,
+          "recent_usage": false
+        },
+        "supports": "Could be linked to your presence if you explain its origin.",
+        "art_key": "torch",
+        "role": "incriminating"
+      }
+    ],
+    "session_id": "sess_20260818_221735"
+  },
+  "player_type": "human",
+  "model": "deepseek-r1:14b",
+  "outcome": "ESCAPE",
+  "turns_taken": 2,
+  "turns": [
+    {
+      "turn": 1,
+      "player_input": "I'm here for an urgent HR matter. The access log backs me up: it records HR-Secure activity at 12:45, and it shows my own login attempts from my IP — attempts that failed, after which there's no post-midnight movement at all. That's the record of someone trying to get in through proper channels and stopping when it didn't work, not someone slipping past security.",
+      "examined_at_time": [
+        "access_log",
+        "server_asset_tag",
+        "jacket",
+        "food_wrapper",
+        "torch"
+      ],
+      "evidence_result": "Known properties of examined objects:\n  - access_log: dated_today=True, failed_attempts=True\n  - server_asset_tag: authorized_access_only=True, dated_recently=False\n  - jacket: fibers_matched_to_carpet=True, pockets_intact=True\n  - food_wrapper: dated_today=False, name_matches_player=False\n  - torch: recent_usage=False, residue_matches_conference_room=True",
+      "gatekeeper_reasoning": "The player's claim is partially supported by the access log showing HR-Secure activity and failed attempts from their IP. However, the absence of post-midnight movement raises questions about their continued presence. The food wrapper's timestamp doesn't align with the claimed urgency. While there's no direct evidence of unauthorized entry, the lingering near restricted areas after hours remains suspicious.",
+      "gatekeeper_response": "Your explanation is partly supported by the access log, but the lack of post-midnight activity and the food wrapper timestamp raise concerns about your true intentions. I'm not fully convinced yet.",
+      "decision_type": "REQUEST_EVIDENCE"
+    },
+    {
+      "turn": 2,
+      "player_input": "The food wrapper has no name and doesn't match me — it's just litter, it places no one anywhere. Look at what the wrapper can't tell you and what the log can: the access log shows my attempts stopped before midnight with no entry afterward. That absence of post-midnight activity is exactly my point — it's the record of someone who tried through proper channels, failed, and left. A person with bad intent doesn't stop at a locked door; they find another way. There's no evidence I did. The log clears me rather than implicating me.",
+      "examined_at_time": [
+        "access_log",
+        "server_asset_tag",
+        "jacket",
+        "food_wrapper",
+        "torch"
+      ],
+      "evidence_result": "Known properties of examined objects:\n  - access_log: dated_today=True, failed_attempts=True\n  - server_asset_tag: authorized_access_only=True, dated_recently=False\n  - jacket: fibers_matched_to_carpet=True, pockets_intact=True\n  - food_wrapper: dated_today=False, name_matches_player=False\n  - torch: recent_usage=False, residue_matches_conference_room=True",
+      "gatekeeper_reasoning": "The player's access log shows failed attempts and no post-midnight activity, aligning with their claim of attempting proper entry and leaving upon failure. The food wrapper doesn't implicate them, and other evidence supports their innocence. While lingering after hours is noted, the lack of incriminating evidence and consistency in claims suggest they are not a threat.",
+      "gatekeeper_response": "Your explanation, while detailed, still leaves some unanswered questions about your presence. However, the absence of post-midnight activity and supporting evidence does not strongly implicate you. I will grant your exit this time, but be mindful of your actions in the future.",
+      "decision_type": "GRANT_EXIT"
+    }
+  ],
+  "started_at": "2026-08-18T22:17:35",
+  "ended_at": "2026-08-18T22:24:22"
+}
