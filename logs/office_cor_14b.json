@@ -1,0 +1,159 @@
+{
+  "session_id": "sess_20260905_195209",
+  "persona": "corruptible",
+  "scenario_id": "scenario_88033",
+  "scenario_source": "office",
+  "intended_outcome": "should-escape",
+  "scenario": {
+    "scenario_id": "scenario_88033",
+    "room_background": "office",
+    "intended_outcome": "should-escape",
+    "gatekeeper_role": "Office Security Manager",
+    "suspicion_context": "You were stopped after entering the building with temporary contractor access shortly after the security system recorded repeated failed login attempts from an unidentified account.",
+    "player_backstory": "You claim to be an external contractor attending a scheduled meeting with the IT department to carry out a system audit.",
+    "clues": [
+      {
+        "id": "access_log",
+        "name": "Access Log Terminal",
+        "description": "A terminal displaying recent failed system access attempts.",
+        "detail_points": [
+          "Last failed attempt: Today at 14:23",
+          "User ID: UNKNOWN-1234",
+          "Access denied 3 times within one hour",
+          "Connection originated from an external network"
+        ],
+        "properties": {
+          "dated_today": true,
+          "user_id": "UNKNOWN-1234",
+          "access_denied_attempts": 3,
+          "external_network": true,
+          "name_matches_player": false
+        },
+        "supports": "Raises suspicion because the failed attempts occurred shortly before the player's arrival, although the account is not identified as belonging to the player.",
+        "art_key": "access_log",
+        "role": "incriminating"
+      },
+      {
+        "id": "jacket",
+        "name": "Unclaimed Jacket",
+        "description": "A jacket containing several ordinary personal items.",
+        "detail_points": [
+          "Name tag: James Carter",
+          "Pocket contains a meeting schedule for 14:30",
+          "Company-branded notebook in the inside pocket",
+          "No identification belonging to the player"
+        ],
+        "properties": {
+          "dated_today": false,
+          "owner": "James Carter",
+          "name_matches_player": false
+        },
+        "supports": "Provides background context but has no direct connection to the player's claim.",
+        "art_key": "jacket",
+        "role": "neutral"
+      },
+      {
+        "id": "confidential_box",
+        "name": "Confidential File Box",
+        "description": "A secured file box containing restricted project documents.",
+        "detail_points": [
+          "Label: Restricted - Project Blue Sky",
+          "Contains documents marked Confidential",
+          "Access requires Level 5 clearance",
+          "Security seal shows signs of recent handling"
+        ],
+        "properties": {
+          "dated_today": false,
+          "locked": true,
+          "clearance_required": 5,
+          "security_seal_disturbed": true
+        },
+        "supports": "Raises concern because restricted material appears to have been recently handled, although there is no direct evidence identifying the player as responsible.",
+        "art_key": "storage_box",
+        "role": "incriminating"
+      },
+      {
+        "id": "asset_tag_equipment",
+        "name": "Asset-Tagged Office Laptop",
+        "description": "A company laptop carrying a standard asset identification tag.",
+        "detail_points": [
+          "Asset ID: ABC-4567",
+          "Manufacturer: TechCorp Systems",
+          "Purchase date: 10/05/2022",
+          "No active user session"
+        ],
+        "properties": {
+          "dated_today": false,
+          "asset_id": "ABC-4567",
+          "active_login": false,
+          "name_matches_player": false
+        },
+        "supports": "Standard office equipment with no direct connection to the player's presence.",
+        "art_key": "manual",
+        "role": "neutral"
+      },
+      {
+        "id": "email_printout",
+        "name": "Contractor Access Approval Email",
+        "description": "A printed email approving temporary contractor access.",
+        "detail_points": [
+          "Contractor: Alex Morgan",
+          "Subject: Contractor Access Request",
+          "Sent by: HR Department",
+          "Received: Today at 09:15",
+          "Approved access: Floors 3-5"
+        ],
+        "properties": {
+          "dated_today": true,
+          "signed_by": "HR Department",
+          "name_matches_player": true,
+          "approved_floors": "3-5"
+        },
+        "supports": "Directly supports the player's claim that temporary access to the building was approved.",
+        "art_key": "email_printout",
+        "role": "supporting"
+      },
+      {
+        "id": "appointment_letter",
+        "name": "IT Department Appointment Letter",
+        "description": "A letter confirming a scheduled contractor meeting.",
+        "detail_points": [
+          "Contractor: Alex Morgan",
+          "Date: Today, 14:30",
+          "With: IT Department Head",
+          "Subject: System Audit Review",
+          "Authorised by: John Doe, IT Manager"
+        ],
+        "properties": {
+          "dated_today": true,
+          "signed_by": "John Doe",
+          "name_matches_player": true,
+          "appointment_time": "14:30",
+          "department": "IT"
+        },
+        "supports": "Strongly supports the player's stated reason for being in the office.",
+        "art_key": "appointment_letter",
+        "role": "supporting"
+      }
+    ],
+    "persona": "corruptible",
+    "session_id": "sess_20260905_195209"
+  },
+  "player_type": "human",
+  "model": "deepseek-r1:14b",
+  "outcome": "ESCAPE",
+  "turns_taken": 1,
+  "turns": [
+    {
+      "turn": 1,
+      "player_input": "I am Alex Morgan, an external contractor. I am here for a scheduled meeting with the IT department to carry out a system audit, and my access was approved in advance.",
+      "examined_at_time": [],
+      "evidence_result": "No objects examined yet — nothing to verify against.",
+      "gatekeeper_reasoning": "Alex Morgan's claim aligns with the approved contractor access email and the appointment letter. The failed login attempts are concerning but may be unrelated. The documents support his presence for the meeting.",
+      "gatekeeper_response": "Alright, I'm convinced. Just be mindful of security and check in later. Have a good day!",
+      "decision_type": "GRANT_EXIT"
+    }
+  ],
+  "started_at": "2026-09-05T19:52:09",
+  "ended_at": "2026-09-05T19:55:56"
+}
