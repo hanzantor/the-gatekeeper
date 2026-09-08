@@ -1,0 +1,137 @@
+{
+  "session_id": "sess_20260908_011511",
+  "persona": "corruptible",
+  "scenario_id": "scenario_54626",
+  "scenario_source": "hospital",
+  "intended_outcome": "should-escape",
+  "scenario": {
+    "scenario_id": "scenario_54626",
+    "room_background": "hospital",
+    "intended_outcome": "should-escape",
+    "gatekeeper_role": "Security Guard",
+    "suspicion_context": "You were stopped near a restricted Radiology area after security could not immediately verify your authorisation to be there.",
+    "player_backstory": "You claim to be a medical equipment contractor attending a scheduled Radiology service appointment and state that you have been authorised to access the department.",
+    "clues": [
+      {
+        "id": "asset_tag_equipment",
+        "name": "Asset-Tagged Medical Equipment",
+        "description": "Medical equipment carrying a hospital asset and service tag.",
+        "detail_points": [
+          "Asset tag number: HOSP-2023-45678",
+          "Department: Radiology",
+          "Service assignment: John Carter",
+          "Checked out for maintenance on 24/10/2023"
+        ],
+        "properties": {
+          "dated_today": true,
+          "department": "Radiology",
+          "assigned_to": "John Carter",
+          "checkout_date": "24/10/2023",
+          "name_matches_player": true
+        },
+        "supports": "Supports the player's claim that they were authorised to service equipment in Radiology.",
+        "art_key": "manual",
+        "role": "supporting"
+      },
+      {
+        "id": "appointment_letter",
+        "name": "Radiology Service Appointment",
+        "description": "A letter confirming a scheduled hospital service appointment.",
+        "detail_points": [
+          "Name: John Carter",
+          "Contact: Dr. Lisa Park, Radiology",
+          "Date: 24/10/2023, Time: 2:30 PM",
+          "Purpose: Medical equipment inspection and maintenance"
+        ],
+        "properties": {
+          "dated_today": true,
+          "signed_by": "Hospital Administration",
+          "appointment_date": "24/10/2023",
+          "name_matches_player": true,
+          "department": "Radiology"
+        },
+        "supports": "Directly supports the player's claim of having a scheduled reason to be in Radiology.",
+        "art_key": "appointment_letter",
+        "role": "supporting"
+      },
+      {
+        "id": "signed_authorisation",
+        "name": "Signed Hospital Access Authorisation",
+        "description": "A signed form authorising temporary contractor access.",
+        "detail_points": [
+          "Contractor: John Carter",
+          "Signed by Dr. Michael Carter",
+          "Authorises access to the Radiology service area",
+          "Valid from 24/10/2023 to 25/10/2023"
+        ],
+        "properties": {
+          "expired": false,
+          "signed_by": "Dr. Michael Carter",
+          "valid_from": "24/10/2023",
+          "expires_on": "25/10/2023",
+          "name_matches_player": true,
+          "department": "Radiology"
+        },
+        "supports": "Strongly supports the player's claim that access to the department was authorised.",
+        "art_key": "delivery_docket",
+        "role": "supporting"
+      },
+      {
+        "id": "coffee_mugs",
+        "name": "Hospital Brand Coffee Mugs",
+        "description": "Two mugs carrying the hospital logo.",
+        "detail_points": [
+          "Brand: Mercy General Hospital",
+          "One mug has a chip on the rim",
+          "Both mugs are clean"
+        ],
+        "properties": {
+          "hospital_logo": true,
+          "condition": "One chipped mug"
+        },
+        "supports": "Adds context to the hospital environment but does not support or contradict the player's claim.",
+        "art_key": "coffee_mug",
+        "role": "neutral"
+      },
+      {
+        "id": "burner_phone",
+        "name": "Unregistered Phone with Recent Messages",
+        "description": "An unregistered phone containing encrypted messages.",
+        "detail_points": [
+          "Recent text: 'Meet me at the west entrance - Code Red'",
+          "Encrypted messaging app: Signal",
+          "Last recorded activity: 1:55 PM",
+          "No registered owner name stored on the device"
+        ],
+        "properties": {
+          "encrypted_messages": true,
+          "last_text": "Code Red",
+          "registered_owner": false,
+          "name_matches_player": false
+        },
+        "supports": "Raises suspicion because of the unexplained encrypted message, although the device is not directly identified as belonging to the player.",
+        "art_key": "burner_phone",
+        "role": "incriminating"
+      }
+    ],
+    "persona": "corruptible",
+    "session_id": "sess_20260908_011511"
+  },
+  "player_type": "human",
+  "model": "deepseek-r1:14b",
+  "outcome": "ESCAPE",
+  "turns_taken": 1,
+  "turns": [
+    {
+      "turn": 1,
+      "player_input": "I am John Carter, a medical equipment contractor. I am here for a scheduled Radiology service appointment and I was authorised to access the department.",
+      "examined_at_time": [],
+      "evidence_result": "No objects examined yet — nothing to verify against.",
+      "gatekeeper_reasoning": "The player's claim seems plausible, and without any evidence to the contrary, combined with the Gatekeeper's tendency to be lenient, it's reasonable to grant exit.",
+      "gatekeeper_response": "I appreciate your cooperation, Mr. Carter. Since you seem to be in a hurry and I don't have any reason to doubt your word, you may proceed.",
+      "decision_type": "GRANT_EXIT"
+    }
+  ],
+  "started_at": "2026-09-08T01:15:11",
+  "ended_at": "2026-09-08T01:15:42"
+}

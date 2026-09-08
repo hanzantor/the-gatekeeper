@@ -100,6 +100,37 @@ Respond as the Gatekeeper. Reason first, then respond.
 
 
 def format_clue_context(clues: list, examined_objects: list) -> str:
+    if not clues:
+        return "(no clue data available)"
+
+    examined = set(examined_objects or [])
+
+    if not examined:
+        return "(the player has not examined any objects yet)"
+
+    blocks = []
+
+    for clue in clues:
+        cid = clue.get("id")
+
+        if cid not in examined:
+            continue
+
+        name = clue.get("name", cid or "object")
+        lines = [f"  {name}:"]
+
+        points = clue.get("detail_points") or []
+        if points:
+            for point in points:
+                lines.append(f"    - {point}")
+        elif clue.get("description"):
+            lines.append(f"    - {clue['description']}")
+
+        blocks.append("\n".join(lines))
+
+    return "\n".join(blocks) if blocks else \
+        "(the player has not examined any objects yet)"
+
     """
     Summarise the detail points of the clues the player has actually examined.
 

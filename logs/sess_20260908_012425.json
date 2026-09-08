@@ -1,0 +1,142 @@
+{
+  "session_id": "sess_20260908_012425",
+  "persona": "suspicious",
+  "scenario_id": "scenario_54931",
+  "scenario_source": "generated",
+  "intended_outcome": "should-escape",
+  "scenario": {
+    "scenario_id": "scenario_54931",
+    "room_background": "office",
+    "intended_outcome": "should-escape",
+    "persona": "suspicious",
+    "gatekeeper_role": "Ted",
+    "suspicion_context": "You are an outsider in the office, and your presence has raised questions among the staff. You claim to be a contractor, but your story doesn't quite add up.",
+    "player_backstory": "You claim to be a contractor here to fix a server room fan that's been causing issues. You say a colleague sent you, but their name doesn't match any employee records.",
+    "clues": [
+      {
+        "id": "access_log",
+        "name": "Access Terminal Log",
+        "description": "A terminal showing recent access attempts to restricted areas.",
+        "detail_points": [
+          "Last accessed by 'jdoe' at 9:15 AM",
+          "Access denied to 'visitor123' at 8:47 AM",
+          "Valid login attempts only from internal IPs",
+          "No record of your login credentials"
+        ],
+        "properties": {
+          "locked": false,
+          "showing_today": true,
+          "access_denied_count": 1
+        },
+        "supports": "If legitimate, could show you were given access by an employee.",
+        "art_key": "access_log",
+        "role": "supporting"
+      },
+      {
+        "id": "email_printout",
+        "name": "Intercepted Email",
+        "description": "A printed email from an unknown sender to 'security@company.com'.",
+        "detail_points": [
+          "Subject: Urgent - Server Room Access",
+          "Sent from 'janesmith@example.com'",
+          "No attachment included",
+          "Printed at 8:30 AM"
+        ],
+        "properties": {
+          "printed": true,
+          "signed_by": "unknown",
+          "attachment_missing": true
+        },
+        "supports": "Neutral—doesn’t directly help or hurt your case.",
+        "art_key": "email_printout",
+        "role": "supporting"
+      },
+      {
+        "id": "wrong_keycard",
+        "name": "Keycard for Restricted Area",
+        "description": "A keycard programmed for access to the server room.",
+        "detail_points": [
+          "Access dates: 10/5, 10/6, 10/7",
+          "Authorized for employee 'jdoe'",
+          "No record of your name in the system",
+          "Missing an asset tag"
+        ],
+        "properties": {
+          "valid": true,
+          "belongs_to_player": false,
+          "asset_tag_missing": true
+        },
+        "supports": "If found on you, could suggest unauthorized access.",
+        "art_key": "access_badge",
+        "role": "incriminating"
+      },
+      {
+        "id": "work_order",
+        "name": "Work Order Request",
+        "description": "A document requesting maintenance on the server room fan.",
+        "detail_points": [
+          "Order number: FAN-2023-456",
+          "Requested by ' Facilities' on 10/5",
+          "Approved by 'Dr. Evans' on 10/6",
+          "No flagged issues noted"
+        ],
+        "properties": {
+          "signed": true,
+          "approved": true,
+          " flagged": false
+        },
+        "supports": "If legitimate, could explain your presence.",
+        "art_key": "work_order",
+        "role": "supporting"
+      },
+      {
+        "id": "asset_tag_equipment",
+        "name": "Network Switch",
+        "description": "A network switch with an asset tag.",
+        "detail_points": [
+          "Serial number: SW-12345",
+          "Purchase date: 2020",
+          "Warranty expires: 10/31/24",
+          "Fully functional"
+        ],
+        "properties": {
+          "working": true,
+          "asset_tagged": true,
+          "recent_use": false
+        },
+        "supports": "Neutral—standard office equipment.",
+        "art_key": "manual",
+        "role": "supporting"
+      },
+      {
+        "id": "coffee_mugs",
+        "name": "Two Coffee Mugs",
+        "description": "Two mugs, one empty, one with coffee residue.",
+        "detail_points": [
+          "Both labeled with names: 'Ted' and 'Visitor'",
+          "Empty mug last used at 9:00 AM",
+          "Residual coffee in the other mug",
+          "No fingerprints detected"
+        ],
+        "properties": {
+          "clean": false,
+          "names": [
+            "Ted",
+            "Visitor"
+          ],
+          "residue": true
+        },
+        "supports": "Neutral—common office items.",
+        "art_key": "coffee_mug",
+        "role": "neutral"
+      }
+    ]
+  },
+  "player_type": "human",
+  "model": "deepseek-r1:14b",
+  "outcome": "INCOMPLETE",
+  "turns_taken": 0,
+  "turns": [],
+  "started_at": "2026-09-08T01:24:25",
+  "ended_at": null
+}
