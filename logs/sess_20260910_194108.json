@@ -1,0 +1,107 @@
+{
+  "session_id": "sess_20260910_194108",
+  "persona": "fair",
+  "scenario_id": "scenario_72857",
+  "scenario_source": "generated",
+  "intended_outcome": "should-escape",
+  "scenario": {
+    "scenario_id": "scenario_72857",
+    "room_background": "research_lab",
+    "intended_outcome": "should-escape",
+    "persona": "fair",
+    "gatekeeper_role": "Fair Gatekeeper",
+    "suspicion_context": "You were observed attempting to enter the restricted research lab during off-hours, and an unusual item was spotted in your possession, prompting suspicion of unauthorised activities.",
+    "player_backstory": "I am Dr. Sarah Johnson, a collaborative researcher from InnovateTech, here to discuss a joint project with Dr. Evans on sustainable energy solutions.",
+    "clues": [
+      {
+        "id": "potted_plant",
+        "name": "Standard Indoor Plant",
+        "description": "A common potted plant used in office settings.",
+        "detail_points": [
+          "Species: Monstera Deliciosa",
+          "Bought on 3 April 2024",
+          "No special markings or tags",
+          "Typical office decoration with no unique features"
+        ],
+        "properties": {
+          "species_known": true,
+          "bought_recently": true,
+          "is_mundane": true,
+          "no_suspicion": true
+        },
+        "supports": "Adds everyday texture without addressing the core suspicion directly.",
+        "art_key": "potted_plant",
+        "role": "neutral"
+      },
+      {
+        "id": "burner_phone",
+        "name": "Disposable Mobile Device",
+        "description": "A simple burner phone.",
+        "detail_points": [
+          "IMEI: 123456789012",
+          "Call made to +1-555-9999 at 14:00 on 18 April",
+          "Number +1-555-9999 not listed in lab communications",
+          "Phone was inactive until manual activation"
+        ],
+        "properties": {
+          "imei_registered": true,
+          "call_to_foreign_sim": true,
+          "call_date": "2024-04-18",
+          "call_time": "14:00"
+        },
+        "supports": "This item could be used to counter arguments about your intentions or to highlight potential covert communications.",
+        "art_key": "burner_phone",
+        "role": "incriminating"
+      },
+      {
+        "id": "work_order",
+        "name": "Lab Work Authorization",
+        "description": "A document for work permissions.",
+        "detail_points": [
+          "Reference Number: LAB-2024-0789",
+          "Issued by Dr. Evans on 12 April",
+          "Valid until 30 April 2024",
+          "Authorizes access to Area 7 for project review"
+        ],
+        "properties": {
+          "reference_known": true,
+          "signed_by_lab_manager": false,
+          "date_issued": "2024-04-12",
+          "valid_upto_date": true,
+          "valid_upto": "2024-04-30"
+        },
+        "supports": "Validates your access for legitimate research purposes, helping to clear suspicion.",
+        "art_key": "work_order",
+        "role": "supporting"
+      },
+      {
+        "id": "appointment_letter",
+        "name": "Official Meeting Confirmation",
+        "description": "A letter confirming an appointment.",
+        "detail_points": [
+          "Scheduled with Dr. Evans on 15 April",
+          "Time: 13:00, location: Conference Room",
+          "Purpose: Data presentation for joint project",
+          "Dr. Evans is the primary contact for this visit"
+        ],
+        "properties": {
+          "appointment_confirmed": true,
+          "with_relevant_person": true,
+          "letter_dated": true,
+          "date": "2024-04-15",
+          "time": "13:00"
+        },
+        "supports": "Confirms your meeting with Dr. Evans, which can be used to argue for your lawful presence in the lab.",
+        "art_key": "appointment_letter",
+        "role": "supporting"
+      }
+    ]
+  },
+  "player_type": "human",
+  "model": "deepseek-r1:8b",
+  "outcome": "INCOMPLETE",
+  "turns_taken": 0,
+  "turns": [],
+  "started_at": "2026-09-10T19:41:08",
+  "ended_at": null
+}

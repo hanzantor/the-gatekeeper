@@ -1,0 +1,85 @@
+{
+  "session_id": "sess_20260910_202320",
+  "persona": "fair",
+  "scenario_id": "scenario_13122",
+  "scenario_source": "generated",
+  "intended_outcome": "should-escape",
+  "scenario": {
+    "scenario_id": "scenario_13122",
+    "room_background": "office",
+    "intended_outcome": "should-escape",
+    "persona": "fair",
+    "gatekeeper_role": "Security Officer",
+    "suspicion_context": "You were found in a restricted area late at night.",
+    "player_backstory": "You claim to be here for legitimate reasons.",
+    "clues": [
+      {
+        "id": "work_order",
+        "name": "Work Order",
+        "description": "A work order.",
+        "detail_points": [],
+        "properties": {},
+        "supports": "supporting",
+        "art_key": "work_order",
+        "role": "supporting"
+      },
+      {
+        "id": "confidential_box",
+        "name": "Confidential File Box",
+        "description": "A confidential file box.",
+        "detail_points": [],
+        "properties": {},
+        "supports": "incriminating",
+        "art_key": "storage_box",
+        "role": "incriminating"
+      },
+      {
+        "id": "business_card",
+        "name": "Business Card",
+        "description": "A business card.",
+        "detail_points": [],
+        "properties": {},
+        "supports": "identity",
+        "art_key": "business_card",
+        "role": "identity"
+      },
+      {
+        "id": "email_printout",
+        "name": "Email Printout",
+        "description": "A email printout.",
+        "detail_points": [],
+        "properties": {},
+        "supports": "supporting",
+        "art_key": "email_printout",
+        "role": "supporting"
+      },
+      {
+        "id": "potted_plant",
+        "name": "Potted Plant",
+        "description": "A potted plant.",
+        "detail_points": [],
+        "properties": {},
+        "supports": "neutral",
+        "art_key": "potted_plant",
+        "role": "neutral"
+      },
+      {
+        "id": "food_wrapper",
+        "name": "Food Wrapper",
+        "description": "A food wrapper.",
+        "detail_points": [],
+        "properties": {},
+        "supports": "neutral",
+        "art_key": "food_wrapper",
+        "role": "neutral"
+      }
+    ]
+  },
+  "player_type": "human",
+  "model": "deepseek-r1:8b",
+  "outcome": "INCOMPLETE",
+  "turns_taken": 0,
+  "turns": [],
+  "started_at": "2026-09-10T20:23:20",
+  "ended_at": null
+}

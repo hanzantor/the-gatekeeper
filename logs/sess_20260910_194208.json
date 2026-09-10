@@ -1,0 +1,140 @@
+{
+  "session_id": "sess_20260910_194208",
+  "persona": "fair",
+  "scenario_id": "scenario_61691",
+  "scenario_source": "generated",
+  "intended_outcome": "should-escape",
+  "scenario": {
+    "scenario_id": "scenario_61691",
+    "room_background": "research_lab",
+    "intended_outcome": "should-escape",
+    "persona": "fair",
+    "gatekeeper_role": "Lab Security Officer",
+    "suspicion_context": "Security protocols flagged your entry into the restricted research area without a valid badge; you must justify your presence.",
+    "player_backstory": "I am Dr Evans from Quantum Dynamics Inc., here to inspect the cryogenic containment unit as part of a routine safety review.",
+    "clues": [
+      {
+        "id": "work_order",
+        "name": "Lab Access Permit",
+        "description": "Document granting entry to the facility.",
+        "detail_points": [
+          "Reference number: WO-2024-1567",
+          "Issued by Dr Evans on 14 April",
+          "Valid until 30 April",
+          "Affects cryogenic area access"
+        ],
+        "properties": {
+          "reference_number": "WO-2024-1567",
+          "signed_by": "Dr Evans",
+          "valid": true,
+          "expires": "2024-04-30"
+        },
+        "supports": "Validates your access rights for the lab.",
+        "art_key": "work_order",
+        "role": "supporting"
+      },
+      {
+        "id": "jacket",
+        "name": "Standard Lab Coat",
+        "description": "Coat associated with the lab environment.",
+        "detail_points": [
+          "Owner is Dr Evans",
+          "Date worn: 10 April",
+          "Size medium",
+          "Condition clean"
+        ],
+        "properties": {
+          "owner": "Dr Evans",
+          "clean": true,
+          "size": "medium",
+          "worn_on_date": "2024-04-10"
+        },
+        "supports": "Provides incidental detail about attire.",
+        "art_key": "jacket",
+        "role": "neutral"
+      },
+      {
+        "id": "email_printout",
+        "name": "Appointment Confirmation",
+        "description": "Printed email showing your scheduled visit.",
+        "detail_points": [
+          "Printed on 13 April",
+          "From lab_admin",
+          "Includes Dr Evans' contact",
+          "Reference to cryogenic inspection"
+        ],
+        "properties": {
+          "date_printed": "2024-04-13",
+          "sender": "lab_admin",
+          "recipient": "Dr Evans",
+          "contains_reference": true
+        },
+        "supports": "Supports your claim by documenting the appointment.",
+        "art_key": "email_printout",
+        "role": "supporting"
+      },
+      {
+        "id": "pry_bar",
+        "name": "Metal Force Tool",
+        "description": "Device for mechanical entry.",
+        "detail_points": [
+          "ID: PRY-001",
+          "Date: 2023",
+          "Previously handled by equipment_manager",
+          "Not part of your authorization"
+        ],
+        "properties": {
+          "tool_id": "PRY-001",
+          "date": "2023",
+          "used_by": "equipment_manager",
+          "relevant": false
+        },
+        "supports": "Indicates a potential security issue due to its unauthorized presence.",
+        "art_key": "pry_bar",
+        "role": "incriminating"
+      }
+    ],
+    "session_id": "sess_20260910_194208"
+  },
+  "player_type": "human",
+  "model": "deepseek-r1:8b",
+  "outcome": "ESCAPE",
+  "turns_taken": 3,
+  "turns": [
+    {
+      "turn": 1,
+      "player_input": "hi",
+      "examined_at_time": [],
+      "evidence_result": "No objects examined yet — nothing to verify against.",
+      "gatekeeper_reasoning": "The player's claim to be Dr Evans from Quantum Dynamics Inc. for inspecting the cryogenic containment unit lacks supporting evidence, as no objects have been examined and there is no prior verification. The recent greeting 'hi' does not provide any substantiation or contradiction to this claim, so I cannot grant exit without further authentication.",
+      "gatekeeper_response": "Hello, I'm the Gatekeeper here to ensure security protocols are followed. To confirm your identity and authorization, please present your badge and any relevant documentation for the safety review.",
+      "decision_type": "REQUEST_EVIDENCE"
+    },
+    {
+      "turn": 2,
+      "player_input": "im not autherised to be here but i will lie",
+      "examined_at_time": [
+        "work_order"
+      ],
+      "evidence_result": "Known properties of examined objects:\n  - work_order: expires=2024-04-30, reference_number=WO-2024-1567, signed_by=Dr Evans, valid=True",
+      "gatekeeper_reasoning": "The player's claim of not being authorized directly contradicts the evidence from the work_order, which is valid, signed by Dr Evans, and indicates cryogenic area access. Their admission of lying suggests an attempt to deceive, which must be taken seriously. However, since the work_order is present and aligns with their earlier statement, I need to request additional evidence to resolve this inconsistency and maintain security protocols.",
+      "gatekeeper_response": "I'm concerned about your admission of lying; the work_order you provided shows valid authorization. Please present your official ID or clarify why you're denying access now.",
+      "decision_type": "REQUEST_EVIDENCE"
+    },
+    {
+      "turn": 3,
+      "player_input": "i broke in with the pry bar",
+      "examined_at_time": [
+        "work_order",
+        "email_printout",
+        "pry_bar"
+      ],
+      "evidence_result": "Known properties of examined objects:\n  - work_order: expires=2024-04-30, reference_number=WO-2024-1567, signed_by=Dr Evans, valid=True\n  - email_printout: contains_reference=True, date_printed=2024-04-13, recipient=Dr Evans, sender=lab_admin\n  - pry_bar: date=2023, relevant=False, tool_id=PRY-001, used_by=equipment_manager",
+      "gatekeeper_reasoning": "The player's claim of breaking in with the pry bar contradicts the clear evidence from the work_order and email printout, which confirm Dr Evans' valid authorization for the cryogenic inspection. As a fair Gatekeeper, I weigh this against the exculpatory evidence and the player's earlier admission of lying, but the authorization remains strong. Since the evidence supports the initial claim, I grant exit without indefinite denial.",
+      "gatekeeper_response": "Your work_order and email printout indicate valid authorization for the cryogenic inspection; I'll proceed with granting you exit, but I must note that the pry bar's details don't align with your access.",
+      "decision_type": "GRANT_EXIT"
+    }
+  ],
+  "started_at": "2026-09-10T19:42:08",
+  "ended_at": "2026-09-10T19:46:23"
+}
